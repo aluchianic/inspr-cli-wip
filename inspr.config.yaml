@@ -1,3 +1,4 @@
-version: "1.0.0"
-acc: "12345"
-token: "Afef#@FSdf2e3"
+mode: production
+version: 0.0.0
+acc: "test-acc"
+token: "123-test-token"

@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var mode string
+var mode = viper.GetString("Mode")
 var exclude []string
 
 func init() {
@@ -36,7 +36,7 @@ var deployCommand = &cobra.Command{
 			}
 		}
 
-		fmt.Printf("Deploying with credentials from acc: %s \n", viper.GetString("acc"))
+		fmt.Printf("Deploying with credentials from acc: %s \n", viper.GetString("Acc"))
 		fmt.Printf("Deploying mode: %s \n", mode)
 		fmt.Printf("Excluded: %v \n", exclude)
 		fmt.Printf("Targets: %v \n", args)
