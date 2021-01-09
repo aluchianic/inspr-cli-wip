@@ -3,11 +3,14 @@ package helpers
 import (
 	"fmt"
 	"github.com/spf13/viper"
+	"os"
+	"path"
 )
 
 // Load CLI configurations
 func Config(path string) func() {
 	return func() {
+		loadCache()
 		loadConfig(path)
 		loadEnv()
 
@@ -17,22 +20,53 @@ func Config(path string) func() {
 	}
 }
 
+// Creates directory
+func createDirIfNotExists(path string) error {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		// create directory
+		if err := os.Mkdir(path, 0754); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Returns path to $HOME/.inspr folder
+func cacheDir() string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		panic(fmt.Errorf("failed to get cache dir: %s", err))
+	}
+
+	return path.Join(home, ".inspr")
+}
+
+// Load cache ...
+func loadCache() {
+	c := cacheDir()
+	if err := createDirIfNotExists(c); err != nil {
+		panic(fmt.Errorf("failed to create dir at %s: %s", c, err))
+	}
+}
+
 // Locate and read CLI configuration file, create if not exists
-func loadConfig(path string) {
-	if path != "" {
-		viper.SetConfigFile(path)
+func loadConfig(cfgPath string) {
+	var cfgName = "inspr.config"
+	if cfgPath != "" {
+		viper.SetConfigFile(cfgPath)
 	} else {
-		viper.SetConfigName("inspr.config")
 		viper.SetConfigType("yaml")
+		viper.SetConfigName(cfgName)
 
 		viper.AddConfigPath(".")
-		viper.AddConfigPath("$HOME/.inspr")
+		viper.AddConfigPath(cacheDir())
 	}
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			setDefaults()
-			if viper.SafeWriteConfig() != nil {
+			p := path.Join(cacheDir(), cfgName+".yaml")
+			if viper.SafeWriteConfigAs(p) != nil {
 				panic(fmt.Errorf("Failed to write config file: %s \n", err))
 			}
 		} else {
@@ -48,7 +82,7 @@ func setDefaults() {
 	viper.SetDefault("Mode", "production")
 }
 
-// Load environment variables prefixed `INSPR`
+// Load environment variables prefixed `INSPR_`
 func loadEnv() {
 	viper.SetEnvPrefix("inspr")
 	viper.AutomaticEnv()
