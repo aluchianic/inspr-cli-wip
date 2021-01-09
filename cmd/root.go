@@ -29,10 +29,7 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/$PROJECT_NAME.inspr.yaml)")
-}
+	cobra.OnInitialize(helpers.Config(cfgFile))
 
-func initConfig() {
-	helpers.InitConfig(cfgFile)
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/$PROJECT_NAME.inspr.yaml)")
 }
