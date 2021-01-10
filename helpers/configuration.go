@@ -8,15 +8,16 @@ import (
 )
 
 // Load CLI configurations
-func Config(path string) func() {
+func Config() func() {
 	return func() {
 		loadCache()
-		loadConfig(path)
 		loadEnv()
+		loadConfig()
 
 		v := viper.GetString("Version")
 		m := viper.GetString("Mode")
-		fmt.Printf("Config is loaded \n, Version: %s \n, Mode: %s \n", v, m)
+		c := viper.GetString("config")
+		fmt.Printf("Config is loaded \n, Version: %s \n, Mode: %s \n, Config: %s \n", v, m, c)
 	}
 }
 
@@ -50,8 +51,10 @@ func loadCache() {
 }
 
 // Locate and read CLI configuration file, create if not exists
-func loadConfig(cfgPath string) {
+func loadConfig() {
 	var cfgName = "inspr.config"
+	var cfgPath = viper.GetString("config")
+
 	if cfgPath != "" {
 		viper.SetConfigFile(cfgPath)
 	} else {
@@ -70,7 +73,11 @@ func loadConfig(cfgPath string) {
 				panic(fmt.Errorf("Failed to write config file: %s \n", err))
 			}
 		} else {
-			panic(fmt.Errorf("Config file was found but another error was produced: %s \n", err))
+			if cfgPath != "" {
+				panic(fmt.Errorf("Config path is set incorrect: %s \n", cfgPath))
+			} else {
+				panic(fmt.Errorf("Should not happen: %s \n", err))
+			}
 		}
 	}
 	// Config file found and successfully parsed

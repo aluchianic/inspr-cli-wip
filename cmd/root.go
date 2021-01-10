@@ -8,8 +8,6 @@ import (
 )
 
 var (
-	cfgFile string
-
 	// rootCmd represents the base command when called without any subcommands
 	rootCmd = &cobra.Command{
 		Use:   "inspr",
@@ -30,7 +28,5 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(helpers.Config(cfgFile))
-
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/$PROJECT_NAME.inspr.yaml)")
+	cobra.OnInitialize(helpers.Config())
 }
