@@ -7,17 +7,16 @@ import (
 	"os"
 )
 
-var cfgFile string
-
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:   "inspr",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
+var (
+	// rootCmd represents the base command when called without any subcommands
+	rootCmd = &cobra.Command{
+		Use:   "inspr",
+		Short: "A brief description of your application",
+		Long: `A longer description that spans multiple lines and likely contains
 examples and usage of using your application. For example:
-
-Inspr CLI.`,
-}
+inspr ... .`,
+	}
+)
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
@@ -29,7 +28,5 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(helpers.Config(cfgFile))
-
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/$PROJECT_NAME.inspr.yaml)")
+	cobra.OnInitialize(helpers.Config())
 }

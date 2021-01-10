@@ -6,8 +6,10 @@ import (
 	"github.com/spf13/viper"
 )
 
-var mode = viper.GetString("Mode")
-var exclude []string
+var (
+	mode    = viper.GetString("Mode")
+	exclude []string
+)
 
 func init() {
 	rootCmd.AddCommand(deployCommand)
