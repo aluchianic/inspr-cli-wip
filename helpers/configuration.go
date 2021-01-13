@@ -14,8 +14,7 @@ func Config() func() {
 		loadEnv()
 		loadCliConfig()
 
-		c := viper.GetString("Config")
-		fmt.Printf("Config is loaded \n Config: %s \n", c)
+		fmt.Printf("Config is loaded \n Acc: %s \n Token: %s \n", viper.GetString("Acc"), viper.GetString("Token"))
 	}
 }
 
@@ -84,7 +83,8 @@ func loadCliConfig() {
 // Set CLI default values
 func setDefaults() {
 	viper.SetDefault("Version", "0.0.0")
-	viper.SetDefault("Mode", "production")
+	viper.SetDefault("Acc", "123456789")
+	viper.SetDefault("Token", "aBcX-d65@-ds12")
 }
 
 // Load environment variables prefixed `INSPR_`
