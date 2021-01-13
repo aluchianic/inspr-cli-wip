@@ -45,7 +45,7 @@ func initializeProject(args []string) (string, error) {
 		}
 	}
 
-	project := &helpers.Project{
+	project := &helpers.Workspace{
 		AbsolutePath: wd,
 		Name:         path.Base(projectName),
 	}
