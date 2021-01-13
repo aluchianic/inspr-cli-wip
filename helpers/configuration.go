@@ -12,12 +12,10 @@ func Config() func() {
 	return func() {
 		loadCache()
 		loadEnv()
-		loadConfig()
+		loadCliConfig()
 
-		v := viper.GetString("Version")
-		m := viper.GetString("Mode")
-		c := viper.GetString("config")
-		fmt.Printf("Config is loaded \n, Version: %s \n, Mode: %s \n, Config: %s \n", v, m, c)
+		c := viper.GetString("Config")
+		fmt.Printf("Config is loaded \n Config: %s \n", c)
 	}
 }
 
@@ -51,9 +49,9 @@ func loadCache() {
 }
 
 // Locate and read CLI configuration file, create if not exists
-func loadConfig() {
+func loadCliConfig() {
 	var cfgName = "inspr.config"
-	var cfgPath = viper.GetString("config")
+	var cfgPath = viper.GetString("Config")
 
 	if cfgPath != "" {
 		viper.SetConfigFile(cfgPath)

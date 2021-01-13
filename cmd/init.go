@@ -13,7 +13,7 @@ var (
 
 	initCmd = &cobra.Command{
 		Use:   "init [name]",
-		Short: "Initialize Inspr application",
+		Short: "[Workspace] Initialize Inspr application",
 		Long: `Initialize (inspr-cli init) will create a new application
   * If a name is provided, a directory with that name will be created in the current directory;
   * If no name is provided, the current directory will be assumed;
