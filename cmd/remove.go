@@ -6,11 +6,14 @@ import (
 )
 
 var force bool
+var tag string
 
 func init() {
 	rootCmd.AddCommand(removeCmd)
 
-	removeCmd.Flags().BoolVarP(&force, "force", "f", false, "Remove dApp even if other resources depends on it.")
+	removeCmd.Flags().BoolVarP(&force, "force", "f", false, "Remove dApp without graceful shutdown of service.")
+	removeCmd.Flags().StringVarP(&tag, "tag", "t", "", "Remove dApp with provided tag.")
+	// --safe [--default]
 }
 
 var removeCmd = &cobra.Command{
