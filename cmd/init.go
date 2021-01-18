@@ -1,58 +1,38 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/spf13/cobra"
-	"inspr-cli/helpers"
-	"os"
-	"path"
+	c "inspr-cli/configs"
 )
 
 var (
-	projectName string
-
+	app     string
 	initCmd = &cobra.Command{
-		Use:   "init [name]",
-		Short: "[Workspace] Initialize Inspr application",
-		Long: `Initialize (inspr-cli init) will create a new application
-  * If a name is provided, a directory with that name will be created in the current directory;
-  * If no name is provided, the current directory will be assumed;
-`,
+		Use:   "init [workspace?]",
+		Args:  cobra.MaximumNArgs(1),
+		Short: "[Workspace] Initialize Inspr workspace or dApp",
 		Run: func(_ *cobra.Command, args []string) {
-			fmt.Printf("%v", args)
-			projectPath, err := initializeProject(args)
-			if err != nil {
-				panic(fmt.Errorf("Failed to initialize project: %s ", err))
+			if len(args) > 0 {
+				c.SetWorkspaceName(args[0])
 			}
-			fmt.Printf("Your Inspr application is ready at\n%s\n", projectPath)
+
+			if found := c.LoadWorkspaceConfig(); !found {
+				c.WriteWorkspaceConfig()
+			}
+
+			if app != "" {
+				c.SetAppName(app)
+				if found := c.LoadAppConfig(); !found {
+					c.WriteAppConfigToDisk()
+				}
+			}
 		},
 	}
 )
 
+// todo: init [workspace?] -a "app-name"
 func init() {
 	rootCmd.AddCommand(initCmd)
-}
 
-func initializeProject(args []string) (string, error) {
-	wd, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-
-	if len(args) > 0 {
-		if args[0] != "." {
-			wd = fmt.Sprintf("%s/%s", wd, args[0])
-		}
-	}
-
-	project := &helpers.Workspace{
-		AbsolutePath: wd,
-		Name:         path.Base(projectName),
-	}
-
-	if err := project.Create(); err != nil {
-		return "", err
-	}
-
-	return project.AbsolutePath, nil
+	initCmd.Flags().StringVarP(&app, "app", "a", "", "Init new DApp (should have also -w where to create)")
 }

@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"inspr-cli/helpers"
+	"inspr-cli/configs"
 	"os"
 )
 
@@ -23,8 +23,9 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
 }
 
 func init() {
-	cobra.OnInitialize(helpers.Config())
+	cobra.OnInitialize(configs.LoadCli())
 }
