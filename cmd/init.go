@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	c "inspr-cli/configs"
+	"inspr-cli/configs"
 )
 
 var (
@@ -12,18 +12,18 @@ var (
 		Args:  cobra.MaximumNArgs(1),
 		Short: "[Workspace] Initialize Inspr workspace or dApp",
 		Run: func(_ *cobra.Command, args []string) {
+			w := configs.Workspace{}
 			if len(args) > 0 {
-				c.SetWorkspaceName(args[0])
+				w.Name = args[0]
 			}
-
-			if found := c.LoadWorkspaceConfig(); !found {
-				c.WriteWorkspaceConfig()
+			if !w.Init() {
+				w.Create()
 			}
 
 			if app != "" {
-				c.SetAppName(app)
-				if found := c.LoadAppConfig(); !found {
-					c.WriteAppConfigToDisk()
+				a := configs.App{Name: app}
+				if !a.Init() {
+					a.Create()
 				}
 			}
 		},
@@ -34,5 +34,5 @@ var (
 func init() {
 	rootCmd.AddCommand(initCmd)
 
-	initCmd.Flags().StringVarP(&app, "app", "a", "", "Init new DApp (should have also -w where to create)")
+	initCmd.Flags().StringVarP(&app, "app", "a", "", "Init new AppConfig (should have also -w where to create)")
 }
