@@ -7,11 +7,15 @@ import (
 	"path"
 )
 
-// Load CLI configurations
-func LoadCli() func() {
+type Cli struct {
+	Version string
+	Acc     string
+}
+
+func (c *Cli) Init() func() {
 	return func() {
-		loadCache()
-		loadEnv()
+		loadCliCache()
+		loadCliEnv()
 		loadCliConfig()
 
 		fmt.Printf("CLI config is loaded \n Acc: %s \n Token: %s \n", viper.GetString("Acc"), viper.GetString("Token"))
@@ -40,7 +44,7 @@ func cacheDir() string {
 }
 
 // Load cache ...
-func loadCache() {
+func loadCliCache() {
 	c := cacheDir()
 	if err := createDirIfNotExists(c); err != nil {
 		panic(fmt.Errorf("failed to create dir at %s: %s", c, err))
@@ -59,7 +63,7 @@ func loadCliConfig() {
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			setDefaults()
+			setCliDefaults()
 			p := path.Join(cacheDir(), cName+".yaml")
 			if viper.SafeWriteConfigAs(p) != nil {
 				panic(fmt.Errorf("Failed to write config file: %s \n", err))
@@ -72,14 +76,14 @@ func loadCliConfig() {
 }
 
 // Set CLI default values
-func setDefaults() {
+func setCliDefaults() {
 	viper.Set("Version", "0.0.0")
 	viper.Set("Acc", "123456789")
 	viper.Set("Token", "aBcX-d65@-ds12")
 }
 
 // Load environment variables prefixed `INSPR_`
-func loadEnv() {
+func loadCliEnv() {
 	viper.SetEnvPrefix("inspr")
 	viper.AutomaticEnv()
 }

@@ -11,7 +11,7 @@ func init() {
 
 var hubFindCmd = &cobra.Command{
 	Use:   "find [dApp name]",
-	Short: "Find dApp in Inpsr Hub",
+	Short: "Init dApp in Inpsr Hub",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, dAppName []string) {
 		name := dAppName[0]
