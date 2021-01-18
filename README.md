@@ -25,6 +25,7 @@ Usage:
   inspr hub [command]
 
 Available Commands:
+  describe    DescribeApp dApp with it dependencies, channel types and third parties
   find        Find dApp in Inpsr Hub
   get         Get dApp from Inspr Hub
 
