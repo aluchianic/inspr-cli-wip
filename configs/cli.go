@@ -1,4 +1,4 @@
-package helpers
+package configs
 
 import (
 	"fmt"
@@ -8,13 +8,13 @@ import (
 )
 
 // Load CLI configurations
-func Config() func() {
+func LoadCli() func() {
 	return func() {
 		loadCache()
 		loadEnv()
 		loadCliConfig()
 
-		fmt.Printf("Config is loaded \n Acc: %s \n Token: %s \n", viper.GetString("Acc"), viper.GetString("Token"))
+		fmt.Printf("CLI config is loaded \n Acc: %s \n Token: %s \n", viper.GetString("Acc"), viper.GetString("Token"))
 	}
 }
 
@@ -49,42 +49,33 @@ func loadCache() {
 
 // Locate and read CLI configuration file, create if not exists
 func loadCliConfig() {
-	var cfgName = "inspr.config"
-	var cfgPath = viper.GetString("Config")
+	var cName = "inspr.config"
 
-	if cfgPath != "" {
-		viper.SetConfigFile(cfgPath)
-	} else {
-		viper.SetConfigType("yaml")
-		viper.SetConfigName(cfgName)
+	viper.SetConfigType("yaml")
+	viper.SetConfigName(cName)
 
-		viper.AddConfigPath(".")
-		viper.AddConfigPath(cacheDir())
-	}
+	viper.AddConfigPath(".")
+	viper.AddConfigPath(cacheDir())
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			setDefaults()
-			p := path.Join(cacheDir(), cfgName+".yaml")
+			p := path.Join(cacheDir(), cName+".yaml")
 			if viper.SafeWriteConfigAs(p) != nil {
 				panic(fmt.Errorf("Failed to write config file: %s \n", err))
 			}
 		} else {
-			if cfgPath != "" {
-				panic(fmt.Errorf("Config path is set incorrect: %s \n", cfgPath))
-			} else {
-				panic(fmt.Errorf("Should not happen: %s \n", err))
-			}
+			panic(fmt.Errorf("Should not happen: %s \n", err))
 		}
 	}
-	// Config file found and successfully parsed
+	// CLI config file found and successfully parsed
 }
 
 // Set CLI default values
 func setDefaults() {
-	viper.SetDefault("Version", "0.0.0")
-	viper.SetDefault("Acc", "123456789")
-	viper.SetDefault("Token", "aBcX-d65@-ds12")
+	viper.Set("Version", "0.0.0")
+	viper.Set("Acc", "123456789")
+	viper.Set("Token", "aBcX-d65@-ds12")
 }
 
 // Load environment variables prefixed `INSPR_`
