@@ -7,22 +7,20 @@ import (
 )
 
 var (
-	all                          bool
-	exclude, include             []string
-	excludeRegExp, includeRegExp string
-	workspace                    string
+	all                                     bool
+	exclude, include                        []string
+	excludeRegExp, includeRegExp, workspace string
 )
 
 func init() {
 	rootCmd.AddCommand(deployCommand)
 
+	deployCommand.Flags().StringVarP(&workspace, "workspace", "w", "", "set path to workspace")
 	deployCommand.Flags().BoolVarP(&all, "all", "a", false, "add all dApps to execution")
 	deployCommand.Flags().StringVarP(&excludeRegExp, "exclude-reg", "E", "", "exclude resources by RegExp from execution")
 	deployCommand.Flags().StringVarP(&includeRegExp, "include-reg", "I", "", "include resources by RegExp into execution")
 	deployCommand.Flags().StringSliceVarP(&include, "include", "i", []string{}, "include resources into execution")
 	deployCommand.Flags().StringSliceVarP(&exclude, "exclude", "c", []string{}, "exclude resources from execution")
-
-	deployCommand.Flags().StringVarP(&workspace, "workspace", "w", "", "set path to workspace")
 }
 
 var deployCommand = &cobra.Command{

@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/spf13/viper"
+	"path"
 )
 
 var vApp = viper.New()
@@ -42,15 +43,19 @@ func setAppDefaults(name string) {
 	vApp.SetDefault("Id", createHash(name))
 	vApp.SetDefault("Channels", &Channels{})
 	vApp.SetDefault("Description", "Add your Application description")
+}
 
-	vApp.AddConfigPath(AppsDir())
+func (a *App) path() string {
+	return path.Join(AppsDir(), a.Name)
 }
 
 func (a *App) Init() bool {
-	setAppDefaults(a.Name)
-	if err := createDirIfNotExists(AppsDir()); err != nil {
-		panic(fmt.Errorf("LoadAppConfig. Failed to create Apps Directory"))
+	if a.Name == "" {
+		panic("App name is required.")
 	}
+
+	setAppDefaults(a.Name)
+	vApp.AddConfigPath(a.path())
 
 	if err := vApp.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
@@ -63,6 +68,12 @@ func (a *App) Init() bool {
 }
 
 func (a *App) Create() {
+	err := createDirIfNotExists(AppsDir())
+	err = createDirIfNotExists(a.path())
+	if err != nil {
+		panic("Failed to create App Directories")
+	}
+
 	if err := vApp.SafeWriteConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileAlreadyExistsError); ok {
 			fmt.Println("Trying to create app over existing one.")

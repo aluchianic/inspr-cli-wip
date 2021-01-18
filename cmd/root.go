@@ -26,5 +26,9 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(configs.LoadCli())
+	cli := configs.Cli{
+		Version: "0.0.0",
+		Acc:     "test-account",
+	}
+	cobra.OnInitialize(cli.Init())
 }
