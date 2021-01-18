@@ -61,7 +61,7 @@ func (w *Workspace) Init() bool {
 }
 func (w *Workspace) Describe() {
 	if wCfg.ConfigFileUsed() == "" {
-		fmt.Println("Can't describe, workspace config is not located")
+		fmt.Println("Can't describe, workspace config is not located. Use inspr init [name] to create new Workspace")
 		return
 	}
 	fmt.Printf("Workspace name: %s \n Apps Dir: %s \n", wCfg.GetString("Name"), AppsDir())

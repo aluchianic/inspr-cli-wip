@@ -87,6 +87,6 @@ func (a *App) Describe() {
 	if vApp.ConfigFileUsed() != "" {
 		fmt.Printf("Config file used: %s \n App: %s \n Description: %s \n", vApp.ConfigFileUsed(), vApp.GetString("Name"), vApp.GetString("Description"))
 	} else {
-		fmt.Printf("Can't resolve App")
+		fmt.Printf("Can't resolve App. Use inspr init -a [name] to init new Application")
 	}
 }
