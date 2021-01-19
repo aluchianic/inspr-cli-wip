@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"inspr-cli/configs"
+	"os"
 )
 
 var (
@@ -28,19 +29,16 @@ var deployCommand = &cobra.Command{
 	Short: "[Cluster] Deploy Workspace on cluster if no arguments passed assuming that Workspace is current directory.",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, apps []string) {
-		w := configs.Workspace{Path: workspace}
-		a := configs.App{Name: apps[0]}
+		var err *configs.ConfigError
 
-		if !w.Init() {
-			panic("Workspace not located.")
-		}
-		if !a.Init() {
-			panic("App not located.")
-		}
+		_, err = configs.InitWorkspace(workspace)
+		_, err = configs.InitApp(apps[0])
+		err = configs.DescribeWorkspace()
+		err = configs.DescribeApp()
 
-		fmt.Println("Deploying from workspace ...")
-		w.Describe()
-		fmt.Println("Deploying app ... ")
-		a.Describe()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: %s\n", err.Message)
+			os.Exit(1)
+		}
 	},
 }

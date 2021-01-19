@@ -20,15 +20,11 @@ inspr ... .`,
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		fmt.Println("EXECUTE ::", err)
 		os.Exit(1)
 	}
 }
 
 func init() {
-	cli := configs.Cli{
-		Version: "0.0.0",
-		Acc:     "test-account",
-	}
-	cobra.OnInitialize(cli.Init())
+	cobra.OnInitialize(configs.InitCLi())
 }

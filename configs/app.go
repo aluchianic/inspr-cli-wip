@@ -3,6 +3,7 @@ package configs
 import (
 	"crypto/sha1"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"github.com/spf13/viper"
 	"path"
@@ -45,48 +46,58 @@ func setAppDefaults(name string) {
 	vApp.SetDefault("Description", "Add your Application description")
 }
 
-func (a *App) path() string {
-	return path.Join(AppsDir(), a.Name)
+func pathToApp(name string) string {
+	return path.Join(AppsDir(), name)
 }
 
-func (a *App) Init() bool {
-	if a.Name == "" {
-		panic("App name is required.")
+// []string AppNames
+func InitApp(name string) (*AppConfig, *ConfigError) {
+	if name == "" {
+		return nil, &ConfigError{
+			Err: errors.New("name is required for App"),
+		}
 	}
+	var conf AppConfig
 
-	setAppDefaults(a.Name)
-	vApp.AddConfigPath(a.path())
+	setAppDefaults(name)
+	vApp.AddConfigPath(pathToApp(name))
 
 	if err := vApp.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			return false
+		return nil, &ConfigError{
+			Err:     err,
+			Message: "failed to read App config",
 		}
 	}
-	fmt.Printf("Application Config used:  %s \n", vApp.ConfigFileUsed())
+	if err := wCfg.Unmarshal(&conf); err != nil {
+		return nil, &ConfigError{
+			Message: "unable to decode App config into struct",
+			Err:     err,
+		}
+	}
 
-	return true
+	return &conf, nil
 }
 
-func (a *App) Create() {
+// strings[] - App names
+func CreateApp(name string) *ConfigError {
 	err := createDirIfNotExists(AppsDir())
-	err = createDirIfNotExists(a.path())
-	if err != nil {
-		panic("Failed to create App Directories")
-	}
-
-	if err := vApp.SafeWriteConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileAlreadyExistsError); ok {
-			fmt.Println("Trying to create app over existing one.")
-		} else {
-			panic(fmt.Errorf("failed to write config file: %s \n", err))
+	err = createDirIfNotExists(pathToApp(name))
+	if err = vApp.SafeWriteConfig(); err != nil {
+		return &ConfigError{
+			Message: "failed to write App config",
+			Err:     err,
 		}
 	}
+	return nil
 }
 
-func (a *App) Describe() {
-	if vApp.ConfigFileUsed() != "" {
-		fmt.Printf("Config file used: %s \n App: %s \n Description: %s \n", vApp.ConfigFileUsed(), vApp.GetString("Name"), vApp.GetString("Description"))
-	} else {
-		fmt.Printf("Can't resolve App. Use inspr init -a [name] to init new Application")
+func DescribeApp() *ConfigError {
+	if vApp.ConfigFileUsed() == "" {
+		return &ConfigError{
+			Err:     viper.ConfigFileNotFoundError{},
+			Message: "can't describe, App config is not located. Use inspr `init [workspace] -app`  to create new App",
+		}
 	}
+	fmt.Printf("App config used: %s, \n Settings: %+v\n", vApp.ConfigFileUsed(), vApp.AllSettings())
+	return nil
 }

@@ -1,30 +1,40 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
 	"inspr-cli/configs"
+	"os"
 )
 
 var (
 	app     string
+	path    string
 	initCmd = &cobra.Command{
-		Use:   "init [workspace?]",
-		Args:  cobra.MaximumNArgs(1),
+		Use:   "init [workspaceName]",
+		Args:  cobra.ExactArgs(1),
 		Short: "[Workspace] Initialize Inspr workspace or dApp",
 		Run: func(_ *cobra.Command, args []string) {
-			w := configs.Workspace{}
-			if len(args) > 0 {
-				w.Name = args[0]
+			wName := args[0]
+
+			_, err := configs.InitWorkspace(path)
+			if err != nil && err.NotFound() {
+				if err := configs.CreateWorkspace(wName); err != nil {
+					_, _ = fmt.Fprintf(os.Stderr, "error: %v\n", err)
+					os.Exit(1)
+				}
 			}
-			if !w.Init() {
-				w.Create()
-			}
+			err = configs.DescribeWorkspace()
 
 			if app != "" {
-				a := configs.App{Name: app}
-				if !a.Init() {
-					a.Create()
+				_, err := configs.InitApp(app)
+				if err != nil && err.NotFound() {
+					if err := configs.CreateApp(app); err != nil {
+						_, _ = fmt.Fprintf(os.Stderr, "error: %v\n", err)
+						os.Exit(1)
+					}
 				}
+				err = configs.DescribeApp()
 			}
 		},
 	}
@@ -35,4 +45,5 @@ func init() {
 	rootCmd.AddCommand(initCmd)
 
 	initCmd.Flags().StringVarP(&app, "app", "a", "", "Init new AppConfig (should have also -w where to create)")
+	initCmd.Flags().StringVarP(&path, "path", "p", "", "Path to workspace to be used, by default searching in current working dirrectory")
 }

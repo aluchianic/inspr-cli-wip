@@ -9,18 +9,36 @@ var (
 	wCfg = viper.New()
 )
 
-type Workspace struct {
-	Name string
-	Path string
+type ConfigError struct {
+	Err     error
+	Message string
 }
 
-func setWorkspaceDefaults(name string) {
-	wCfg.SetConfigType("yaml")
-	wCfg.SetDefault("Name", name)
+func (r *ConfigError) Error() string {
+	return r.Err.Error()
+}
+
+func (r *ConfigError) AlreadyExists() bool {
+	_, ok := r.Err.(viper.ConfigFileAlreadyExistsError)
+	return ok
+}
+
+func (r *ConfigError) NotFound() bool {
+	_, ok := r.Err.(viper.ConfigFileNotFoundError)
+	return ok
+}
+
+type WorkspaceConfig struct {
+	Name        string
+	Description string
+	AppsDir     string
+}
+
+func setWorkspaceDefaults() {
 	wCfg.SetConfigName("inspr.workspace")
+	wCfg.SetConfigType("yaml")
 
 	wCfg.SetDefault("AppsDir", AppsDir())
-	wCfg.SetDefault("Token", viper.GetString("Token"))
 	wCfg.SetDefault("Description", "Add your Workspace description")
 }
 
@@ -31,38 +49,54 @@ func AppsDir() string {
 	return "apps"
 }
 
-func (w *Workspace) Create() {
+func CreateWorkspace(name string) error {
+	wCfg.Set("Name", name)
+
 	if err := wCfg.SafeWriteConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileAlreadyExistsError); ok {
-			fmt.Println("Workspace already initialized")
-		} else {
-			panic(fmt.Errorf("Failed to write config file: %s \n", err))
+		return &ConfigError{
+			Err:     err,
+			Message: "failed to write Workspace config",
 		}
 	}
-	fmt.Printf("Created new Workspace in: %s \n Name: %s \n Description: %s \n AppsDir: %s", wCfg.ConfigFileUsed(), wCfg.GetString("Name"), wCfg.GetString("Description"), AppsDir())
+
+	fmt.Printf("Created new Workspace in: %s \n Settings: %+v", wCfg.ConfigFileUsed(), wCfg.AllSettings())
+	return nil
 }
 
-func (w *Workspace) Init() bool {
-	setWorkspaceDefaults(w.Name)
-	if w.Path != "" {
-		wCfg.AddConfigPath(w.Path)
+func InitWorkspace(path string) (*WorkspaceConfig, *ConfigError) {
+	var conf WorkspaceConfig
+
+	setWorkspaceDefaults()
+	if path != "" {
+		wCfg.AddConfigPath(path)
 	} else {
 		wCfg.AddConfigPath(".")
 	}
 
 	if err := wCfg.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			return false
+		return nil, &ConfigError{
+			Err:     err,
+			Message: "failed to read config",
 		}
 	}
-	fmt.Printf("Workspace config file : %s \n", wCfg.ConfigFileUsed())
 
-	return true
-}
-func (w *Workspace) Describe() {
-	if wCfg.ConfigFileUsed() == "" {
-		fmt.Println("Can't describe, workspace config is not located. Use inspr init [name] to create new Workspace")
-		return
+	if err := wCfg.Unmarshal(&conf); err != nil {
+		return nil, &ConfigError{
+			Message: "unable to decode into struct",
+			Err:     err,
+		}
 	}
-	fmt.Printf("Workspace name: %s \n Apps Dir: %s \n", wCfg.GetString("Name"), AppsDir())
+
+	return &conf, nil
+}
+
+func DescribeWorkspace() *ConfigError {
+	if wCfg.ConfigFileUsed() == "" {
+		return &ConfigError{
+			Err:     viper.ConfigFileNotFoundError{},
+			Message: "can't describe, workspace config is not located. Use inspr init [name] to create new Workspace",
+		}
+	}
+	fmt.Printf("Workspace config used: %s \n Settings: %+v \n", wCfg.ConfigFileUsed(), wCfg.AllSettings())
+	return nil
 }

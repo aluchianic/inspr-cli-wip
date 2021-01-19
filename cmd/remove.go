@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
 	"inspr-cli/configs"
+	"os"
 )
 
 var (
@@ -19,14 +21,24 @@ func init() {
 }
 
 var removeCmd = &cobra.Command{
-	Use:   "remove [id...]",
+	Use:   "remove [appName...]",
 	Short: "[Cluster] Remove deployed dApp from cluster",
+	Args:  cobra.MinimumNArgs(1),
 	Long:  "By default command tries to remove in 'safe' mode, awaiting to close all connections",
-	Run: func(cmd *cobra.Command, ids []string) {
-		_ = configs.Workspace{Path: w}
-		a := configs.App{
-			Id: ids[0],
+	Run: func(cmd *cobra.Command, appNames []string) {
+		var (
+			aConf *configs.AppConfig
+			err   *configs.ConfigError
+		)
+		_, err = configs.InitWorkspace(workspace)
+		aConf, err = configs.InitApp(appNames[0])
+
+		err = configs.DescribeWorkspace()
+		err = configs.DescribeApp()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: %s\n", err.Message)
+			os.Exit(1)
 		}
-		a.Describe()
+		fmt.Printf("Removing app with name: %s", aConf.Name)
 	},
 }
