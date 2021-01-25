@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"inspr-cli/configs"
-	"os"
 )
 
 var (
@@ -15,26 +14,19 @@ var (
 		Args:  cobra.ExactArgs(1),
 		Short: "[Workspace] Initialize Inspr workspace or dApp",
 		Run: func(_ *cobra.Command, args []string) {
-			wName := args[0]
+			var (
+				wName = args[0]
+				w     *configs.Workspace
+				a     *configs.Application
+				err   *configs.ConfigError
+			)
 
-			_, err := configs.InitWorkspace(path)
-			if err != nil && err.NotFound() {
-				if err := configs.CreateWorkspace(wName); err != nil {
-					_, _ = fmt.Fprintf(os.Stderr, "error: %v\n", err)
-					os.Exit(1)
-				}
-			}
-			err = configs.DescribeWorkspace()
-
+			w = configs.NewWorkspace(wName)
+			fmt.Printf("Inited new workpace :: %+v \n", w)
 			if app != "" {
-				_, err := configs.InitApp(app)
-				if err != nil && err.NotFound() {
-					if err := configs.CreateApp(app); err != nil {
-						_, _ = fmt.Fprintf(os.Stderr, "error: %v\n", err)
-						os.Exit(1)
-					}
-				}
-				err = configs.DescribeApp()
+				a, err = w.NewApplication(app)
+				configs.ShowAndExistIfErrorExists(err)
+				fmt.Printf("Application innited %+v\n", a)
 			}
 		},
 	}

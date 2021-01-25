@@ -34,3 +34,19 @@ Flags:
 
 Use "inspr hub [command] --help" for more information about a command.
 ```
+
+
+```
+
+  
+
+ [inspr]
+    - Locate and create if not found CLI config ($HOME/.inspr/cli.config.yaml)
+ [inspr ...] for every command!
+    - Locate workspace config ($name.workspace.yaml)
+        - cwd() OR (env INSPR_WORKSPACE_PATH, -w --workspace-path (flag)) // Bind flag to ENV
+ [inspr ...] app related 
+    - Locate app config ($name.app.yaml)
+        - $name.workspace.yaml["applications"] search each $name.app.yaml
+        - when located
+``` 

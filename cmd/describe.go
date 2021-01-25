@@ -1,10 +1,8 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/spf13/cobra"
 	"inspr-cli/configs"
-	"os"
 )
 
 func init() {
@@ -17,12 +15,17 @@ var describeCmd = &cobra.Command{
 	Short: "DescribeApp dApp with it dependencies, channel types and third parties",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		_, err := configs.InitApp(args[0])
-		err = configs.DescribeApp()
+		var (
+			appName = args[0]
+			w       *configs.Workspace
+			a       *configs.Application
+			err     *configs.ConfigError
+		)
 
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "error: %v\n", err)
-			os.Exit(1)
-		}
+		w = configs.InitWorkspace()
+		a, err = w.InitApplication(appName)
+		configs.ShowAndExistIfErrorExists(err)
+		err = a.Describe()
+		configs.ShowAndExistIfErrorExists(err)
 	},
 }

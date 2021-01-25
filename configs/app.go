@@ -1,103 +1,112 @@
 package configs
 
 import (
-	"crypto/sha1"
-	"encoding/base64"
-	"errors"
 	"fmt"
 	"github.com/spf13/viper"
 	"path"
 )
 
-var vApp = viper.New()
-
-type App struct {
-	Name string
-	Id   string
-}
+var (
+	aCfg = viper.New()
+	app  Application
+)
 
 type Channels struct {
 	In  []string
 	Out []string
 }
 
-type AppConfig struct {
-	Name      string
+// Application config
+type Application struct {
+	Name      AppName
 	Id        string
 	DependsOn []string
 	Channels
 }
 
-func createHash(s string) string {
-	h := sha1.New()
-	h.Write([]byte(s))
-
-	return base64.URLEncoding.EncodeToString(h.Sum(nil))
-}
-
-func setAppDefaults(name string) {
-	vApp.SetConfigType("yaml")
-	vApp.SetConfigName("inspr.app")
-
-	vApp.SetDefault("Depends", []string{})
-	vApp.SetDefault("Name", name)
-	vApp.SetDefault("Id", createHash(name))
-	vApp.SetDefault("Channels", &Channels{})
-	vApp.SetDefault("Description", "Add your Application description")
-}
-
-func pathToApp(name string) string {
-	return path.Join(AppsDir(), name)
-}
-
-// []string AppNames
-func InitApp(name string) (*AppConfig, *ConfigError) {
-	if name == "" {
+// Creates new Application under Workspace.AppsDir/$Application.Name/
+func (w *Workspace) NewApplication(name string) (*Application, *ConfigError) {
+	if w.AppExists(AppName(name)) {
 		return nil, &ConfigError{
-			Err: errors.New("name is required for App"),
+			Message: "Passed name already exists",
 		}
 	}
-	var conf AppConfig
 
-	setAppDefaults(name)
-	vApp.AddConfigPath(pathToApp(name))
+	var pathToApp = toAbsolute(path.Join(workspaceConf.AppsDir, name))
+	_ = createDirIfNotExists(workspaceConf.AppsDir)
+	_ = createDirIfNotExists(pathToApp)
 
-	if err := vApp.ReadInConfig(); err != nil {
+	aCfg.Set("Name", name)
+	aCfg.SetConfigName(name + ".application")
+	aCfg.SetConfigType("yaml")
+
+	aCfg.AddConfigPath(pathToApp)
+
+	setAppDefaults()
+	if err := aCfg.SafeWriteConfig(); err != nil {
 		return nil, &ConfigError{
 			Err:     err,
-			Message: "failed to read App config",
+			Message: "failed to write Application config",
 		}
 	}
-	if err := wCfg.Unmarshal(&conf); err != nil {
+
+	if err := w.AddApplication(&app); err != nil {
+		return nil, err
+	}
+
+	fmt.Printf("Created new Application in: %s \n Settings: %+v", aCfg.ConfigFileUsed(), aCfg.AllSettings())
+	a, err := w.InitApplication(name)
+	return a, err
+}
+
+// Initialize Application config by name
+func (w *Workspace) InitApplication(name string) (*Application, *ConfigError) {
+	if !w.AppExists(AppName(name)) {
 		return nil, &ConfigError{
-			Message: "unable to decode App config into struct",
+			Message: "Passed name doesn't exist in config",
+		}
+	}
+
+	n := name + ".application.yaml"
+	patterns := []string{n, "**/" + n, "**/**/" + n}
+	confPath, err := findFile(w.Root(), patterns)
+	if err != nil {
+		fmt.Printf("ERRROR : %s \n", err)
+	}
+
+	aCfg.SetConfigFile(confPath)
+	if err := aCfg.ReadInConfig(); err != nil {
+		return nil, &ConfigError{
+			Err:     err,
+			Message: "failed to read config",
+		}
+	}
+
+	if err := aCfg.Unmarshal(&workspaceConf); err != nil {
+		return nil, &ConfigError{
+			Message: "unable to decode into struct",
 			Err:     err,
 		}
 	}
 
-	return &conf, nil
+	return &app, nil
 }
 
-// strings[] - App names
-func CreateApp(name string) *ConfigError {
-	err := createDirIfNotExists(AppsDir())
-	err = createDirIfNotExists(pathToApp(name))
-	if err = vApp.SafeWriteConfig(); err != nil {
-		return &ConfigError{
-			Message: "failed to write App config",
-			Err:     err,
-		}
-	}
-	return nil
-}
-
-func DescribeApp() *ConfigError {
-	if vApp.ConfigFileUsed() == "" {
+// Prints all currently initialized Application settings
+func (a *Application) Describe() *ConfigError {
+	if aCfg.ConfigFileUsed() == "" {
 		return &ConfigError{
 			Err:     viper.ConfigFileNotFoundError{},
-			Message: "can't describe, App config is not located. Use inspr `init [workspace] -app`  to create new App",
+			Message: "can't describe, workspace config is not located. Use inspr init [name] to create new Workspace",
 		}
 	}
-	fmt.Printf("App config used: %s, \n Settings: %+v\n", vApp.ConfigFileUsed(), vApp.AllSettings())
+	fmt.Printf("Workspace config used: %s \n Settings: %+v \n", wCfg.ConfigFileUsed(), wCfg.AllSettings())
 	return nil
+}
+
+// Sets Application default values
+func setAppDefaults() {
+	aCfg.SetDefault("Depends", []string{})
+	aCfg.SetDefault("Channels", &Channels{})
+	aCfg.SetDefault("Description", "Add your Application description")
 }

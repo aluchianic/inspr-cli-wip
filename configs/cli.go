@@ -13,11 +13,11 @@ type CliConfig struct {
 	Token   string
 }
 
-func InitCLi() func() {
-	return func() {
-		loadCliCache()
-		loadCliEnv()
-		loadCliConfig()
+func InitCLi() {
+	loadCliCache()
+	loadCliEnv()
+	if err := loadCliConfig(); err != nil {
+		os.Exit(1)
 	}
 }
 
@@ -51,8 +51,8 @@ func loadCliCache() {
 }
 
 // Locate and read CLI configuration file, create if not exists
-func loadCliConfig() (*CliConfig, *ConfigError) {
-	var conf CliConfig
+func loadCliConfig() *ConfigError {
+	var cliConf CliConfig
 
 	viper.SetConfigType("yaml")
 	viper.SetConfigName("inspr.config")
@@ -63,7 +63,7 @@ func loadCliConfig() (*CliConfig, *ConfigError) {
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			if viper.SafeWriteConfig() != nil {
-				return nil, &ConfigError{
+				return &ConfigError{
 					Err:     err,
 					Message: "failed to write CLI config file",
 				}
@@ -71,14 +71,16 @@ func loadCliConfig() (*CliConfig, *ConfigError) {
 		}
 	}
 
-	if err := viper.Unmarshal(&conf); err != nil {
-		return nil, &ConfigError{
+	if err := viper.Unmarshal(&cliConf); err != nil {
+		return &ConfigError{
 			Err:     err,
 			Message: "unable to decode CLI config into struct",
 		}
 	}
 
-	return &conf, nil
+	fmt.Printf("cliConf :: %+v", cliConf)
+
+	return nil
 }
 
 // Set CLI default values
