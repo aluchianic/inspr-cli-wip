@@ -5,28 +5,21 @@ import (
 	"inspr-cli/configs"
 )
 
-var (
-	force bool
-	w     string
-)
+var force bool
 
 func init() {
 	rootCmd.AddCommand(removeCmd)
 
+	configs.AddPathFlag(removeCmd)
+
 	removeCmd.Flags().BoolVarP(&force, "force", "f", false, "Remove dApp without graceful shutdown of service.")
-	removeCmd.Flags().StringVarP(&w, "workspace", "w", "", "Set path to workspace")
 	// --safe [--default]
 }
 
 var removeCmd = &cobra.Command{
-	Use:   "remove [id...]",
+	Use:   "remove [appName...]",
 	Short: "[Cluster] Remove deployed dApp from cluster",
+	Args:  cobra.MinimumNArgs(1),
 	Long:  "By default command tries to remove in 'safe' mode, awaiting to close all connections",
-	Run: func(cmd *cobra.Command, ids []string) {
-		_ = configs.Workspace{Path: w}
-		a := configs.App{
-			Id: ids[0],
-		}
-		a.Describe()
-	},
+	Run:   func(cmd *cobra.Command, appNames []string) {},
 }

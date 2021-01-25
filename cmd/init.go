@@ -1,30 +1,32 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
 	"inspr-cli/configs"
 )
 
 var (
 	app     string
+	path    string
 	initCmd = &cobra.Command{
-		Use:   "init [workspace?]",
-		Args:  cobra.MaximumNArgs(1),
+		Use:   "init [workspaceName]",
+		Args:  cobra.ExactArgs(1),
 		Short: "[Workspace] Initialize Inspr workspace or dApp",
 		Run: func(_ *cobra.Command, args []string) {
-			w := configs.Workspace{}
-			if len(args) > 0 {
-				w.Name = args[0]
-			}
-			if !w.Init() {
-				w.Create()
-			}
+			var (
+				wName = args[0]
+				w     *configs.Workspace
+				a     *configs.Application
+				err   *configs.ConfigError
+			)
 
+			w = configs.NewWorkspace(wName)
+			fmt.Printf("Inited new workpace :: %+v \n", w)
 			if app != "" {
-				a := configs.App{Name: app}
-				if !a.Init() {
-					a.Create()
-				}
+				a, err = w.NewApplication(app)
+				configs.ShowAndExistIfErrorExists(err)
+				fmt.Printf("Application innited %+v\n", a)
 			}
 		},
 	}
@@ -35,4 +37,5 @@ func init() {
 	rootCmd.AddCommand(initCmd)
 
 	initCmd.Flags().StringVarP(&app, "app", "a", "", "Init new AppConfig (should have also -w where to create)")
+	initCmd.Flags().StringVarP(&path, "path", "p", "", "Path to workspace to be used, by default searching in current working dirrectory")
 }
