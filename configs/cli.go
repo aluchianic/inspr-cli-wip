@@ -78,7 +78,7 @@ func loadCliConfig() *ConfigError {
 		}
 	}
 
-	fmt.Printf("cliConf :: %+v", cliConf)
+	fmt.Printf("cli token: %s acc: %s \n", cliConf.Token, cliConf.Account)
 
 	return nil
 }
