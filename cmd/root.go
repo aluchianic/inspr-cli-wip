@@ -26,6 +26,6 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(configs.InitCLi)
+	configs.InitCLi()
 	configs.InitWorkspace()
 }

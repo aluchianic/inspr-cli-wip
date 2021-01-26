@@ -8,7 +8,7 @@ import (
 
 var (
 	aCfg = viper.New()
-	app  Application
+	app  = Application{}
 )
 
 type Channels struct {
@@ -28,12 +28,12 @@ type Application struct {
 func (w *Workspace) NewApplication(name string) (*Application, *ConfigError) {
 	if w.AppExists(AppName(name)) {
 		return nil, &ConfigError{
-			Message: "Passed name already exists",
+			Message: "`" + name + "`" + " already exists in workspace.",
 		}
 	}
 
-	var pathToApp = toAbsolute(path.Join(workspaceConf.AppsDir, name))
-	_ = createDirIfNotExists(workspaceConf.AppsDir)
+	var pathToApp = toAbsolute(path.Join(w.AppsDir, name))
+	_ = createDirIfNotExists(w.AppsDir)
 	_ = createDirIfNotExists(pathToApp)
 
 	aCfg.Set("Name", name)
@@ -50,12 +50,16 @@ func (w *Workspace) NewApplication(name string) (*Application, *ConfigError) {
 		}
 	}
 
-	if err := w.AddApplication(&app); err != nil {
+	if err := w.AddApplication(AppName(name)); err != nil {
 		return nil, err
 	}
 
-	fmt.Printf("Created new Application in: %s \n Settings: %+v", aCfg.ConfigFileUsed(), aCfg.AllSettings())
 	a, err := w.InitApplication(name)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Printf("Created new Application in: %s \n", aCfg.ConfigFileUsed())
 	return a, err
 }
 
@@ -100,7 +104,7 @@ func (a *Application) Describe() *ConfigError {
 			Message: "can't describe, workspace config is not located. Use inspr init [name] to create new Workspace",
 		}
 	}
-	fmt.Printf("Workspace config used: %s \n Settings: %+v \n", wCfg.ConfigFileUsed(), wCfg.AllSettings())
+	fmt.Printf("Application config used: %s \n", aCfg.ConfigFileUsed())
 	return nil
 }
 

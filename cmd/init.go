@@ -16,17 +16,20 @@ var (
 		Run: func(_ *cobra.Command, args []string) {
 			var (
 				wName = args[0]
-				w     *configs.Workspace
+				w     = configs.NewWorkspace(wName)
 				a     *configs.Application
 				err   *configs.ConfigError
 			)
 
-			w = configs.NewWorkspace(wName)
-			fmt.Printf("Inited new workpace :: %+v \n", w)
 			if app != "" {
 				a, err = w.NewApplication(app)
+				if err != nil && err.AlreadyExists() {
+					fmt.Printf("Application `%s` already exists \n", app)
+				} else {
+					configs.ShowAndExistIfErrorExists(err)
+				}
+				err = a.Describe()
 				configs.ShowAndExistIfErrorExists(err)
-				fmt.Printf("Application innited %+v\n", a)
 			}
 		},
 	}

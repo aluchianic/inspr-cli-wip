@@ -7,11 +7,12 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 )
 
 var (
 	wCfg          = viper.New()
-	workspaceConf = Workspace{}
+	workspaceConf Workspace
 	// flags
 	workspaceFlag string
 	excludeFlag   string
@@ -50,23 +51,44 @@ func NewWorkspace(name string) *Workspace {
 		wCfg.AddConfigPath(".")
 	}
 
-	fmt.Printf("Created new Workspace in: %s \n Settings: %+v", wCfg.ConfigFileUsed(), wCfg.AllSettings())
 	w := InitWorkspace()
+	if err := w.CreateNewConfig(); err != nil && err.AlreadyExists() {
+		fmt.Printf("Workspace already exists in: %s \n", wCfg.ConfigFileUsed())
+		return w
+	} else {
+		ShowAndExistIfErrorExists(err)
+	}
+
+	fmt.Printf("Created new Workspace in: %s \n", w.Root())
+
 	return w
 }
 
 // Returns workspace root path
 func (w *Workspace) Root() string {
-	return getRootPath()
+	p := getWorkspacePath()
+	return strings.Replace(p, filepath.Base(p), "", -1)
 }
 
 // Writes in config values from current memory state
 func (w *Workspace) WriteInConfig() *ConfigError {
 	err := wCfg.MergeInConfig()
+	if err = wCfg.WriteConfig(); err != nil {
+		return &ConfigError{
+			Err:     err,
+			Message: "failed to write into Workspace config",
+		}
+	}
+	return nil
+}
+
+// Creates new config file
+func (w *Workspace) CreateNewConfig() *ConfigError {
+	err := wCfg.MergeInConfig()
 	if err = wCfg.SafeWriteConfig(); err != nil {
 		return &ConfigError{
 			Err:     err,
-			Message: "failed to write Workspace config",
+			Message: "failed to create new Workspace config",
 		}
 	}
 	return nil
@@ -74,8 +96,8 @@ func (w *Workspace) WriteInConfig() *ConfigError {
 
 // Returns if Application exists in workspace config
 func (w *Workspace) AppExists(name AppName) bool {
-	found := false
-	for _, app := range workspaceConf.Applications {
+	var found = false
+	for _, app := range w.Applications {
 		if app == name {
 			found = true
 		}
@@ -84,8 +106,9 @@ func (w *Workspace) AppExists(name AppName) bool {
 }
 
 // Adds Application to Workspace config
-func (w *Workspace) AddApplication(a *Application) *ConfigError {
-	workspaceConf.Applications = append(workspaceConf.Applications, a.Name)
+func (w *Workspace) AddApplication(name AppName) *ConfigError {
+	w.Applications = append(w.Applications, name)
+	wCfg.Set("Applications", w.Applications)
 	return w.WriteInConfig()
 }
 
@@ -97,7 +120,7 @@ func (w *Workspace) Describe() *ConfigError {
 			Message: "can't describe, workspace config is not located. Use inspr init [name] to create new Workspace",
 		}
 	}
-	fmt.Printf("Workspace config used: %s \n Settings: %+v \n", wCfg.ConfigFileUsed(), wCfg.AllSettings())
+	fmt.Printf("Workspace config used: %s \n", wCfg.ConfigFileUsed())
 	return nil
 }
 
@@ -116,11 +139,13 @@ func AddExcludeFlag(command *cobra.Command) {
 }
 
 // ----------------------------------
-// Returns current used Workspace root path
-func getRootPath() string {
+// Returns current used Workspace path
+func getWorkspacePath() string {
+	// If config is already initialized return it path
 	if p := wCfg.ConfigFileUsed(); p != "" {
 		return p
 	}
+
 	var workspaceDir string
 	if workspaceFlag != "" {
 		workspaceDir = workspaceFlag
@@ -142,15 +167,8 @@ func getRootPath() string {
 
 // Locate Workspace config
 func locateWorkspaceConfig() *ConfigError {
-	p := getRootPath()
+	p := getWorkspacePath()
 	wCfg.SetConfigFile(p)
-
-	if err := wCfg.ReadInConfig(); err != nil {
-		return &ConfigError{
-			Err:     err,
-			Message: "failed to read config",
-		}
-	}
 
 	if err := wCfg.Unmarshal(&workspaceConf); err != nil {
 		return &ConfigError{
@@ -159,6 +177,12 @@ func locateWorkspaceConfig() *ConfigError {
 		}
 	}
 
+	if err := wCfg.ReadInConfig(); err != nil {
+		return &ConfigError{
+			Err:     err,
+			Message: "failed to read config",
+		}
+	}
 	return nil
 }
 
@@ -167,6 +191,7 @@ func setWorkspaceDefaults() {
 	wCfg.SetConfigType("yaml")
 	wCfg.SetDefault("AppsDir", "apps")
 	wCfg.SetDefault("Description", "Add your Workspace description")
+	wCfg.SetDefault("Applications", []string{})
 }
 
 // return absolute path, wd in case of - ""
@@ -179,7 +204,6 @@ func toAbsolute(p string) (abs string) {
 		if err != nil {
 			return ""
 		}
-		fmt.Println("dir  " + dir)
 		res = path.Join(dir, p)
 	}
 
