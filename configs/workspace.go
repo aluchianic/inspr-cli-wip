@@ -23,7 +23,6 @@ type AppName string
 
 // Workspace config
 type Workspace struct {
-	Name         string
 	Description  string
 	AppsDir      string
 	Applications []AppName
@@ -41,7 +40,6 @@ func InitWorkspace() *Workspace {
 
 // Creates new workspace in current working dir or in workspaceFlag path
 func NewWorkspace(name string) *Workspace {
-	wCfg.Set("Name", name)
 	wCfg.SetConfigName(name + ".workspace")
 	wCfg.SetConfigType("yaml")
 

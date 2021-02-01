@@ -101,7 +101,7 @@ func (a *Application) Describe() *ConfigError {
 	if aCfg.ConfigFileUsed() == "" {
 		return &ConfigError{
 			Err:     viper.ConfigFileNotFoundError{},
-			Message: "can't describe, workspace config is not located. Use inspr init [name] to create new Workspace",
+			Message: "can't describe, application config is not located. Use inspr init [name] -a to create new Application",
 		}
 	}
 	fmt.Printf("Application config used: %s \n", aCfg.ConfigFileUsed())

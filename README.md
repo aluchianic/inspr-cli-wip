@@ -34,3 +34,44 @@ Flags:
 
 Use "inspr hub [command] --help" for more information about a command.
 ```
+
+### Usage :
+
+after `go install inspr-cli` navigate to directory where you want to create initial setup
+
+```bash 
+    inspr-cli init "your-project-name"
+    inspr-cli init "your-project-name" --app [-a] "your-app-name"
+    inspr-cli init "your-project-name" --path [-p] "./path/to/workspace" - for CI/CD maybe
+``` 
+
+For all commands besides help/version you need to have a workspace config, which is `$any-name.workspace.yaml`.    
+
+```js 
+    // --path [-p] ----> OS environment variable: INSPR_WorkspaceDir ---->  ~/current/dir/[any-name].workspace.yaml
+```
+
+
+
+
+
+ 
+
+
+
+```bash
+    Configs setup:
+                          
+       N - any name,                            
+                          
+                               _--------------------_
+    -  [N].workspace.yaml ---->|  appsDir: /app     | 
+                               |  applications: []A | 
+                                --------------------
+    
+                                     _--------------------_
+    -  app/[A].application.yaml ---->|  name: A           | 
+                                     |  channels: C       | 
+                                      --------------------
+
+```
