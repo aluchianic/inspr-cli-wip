@@ -17,14 +17,15 @@ var (
 		Run: func(_ *cobra.Command, args []string) {
 			workspace := configs.WorkspaceFiles{}
 
-			err := workspace.Load("workspace")
+			err := workspace.Load()
 			// Create workspace if not found
 			if err != nil && err.NotFound() {
 				err := workspace.Create(args[0])
 				configs.ShowAndExistIfErrorExists(err)
 			}
 			// Parse workspace to get config definition
-			workspace.Parse()
+			err = workspace.Parse()
+			configs.ShowAndExistIfErrorExists(err)
 
 			for _, app := range apps {
 				p := strings.ReplaceAll(workspace.Path, path.Base(workspace.Path), "")

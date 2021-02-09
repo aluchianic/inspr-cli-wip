@@ -1,10 +1,15 @@
 package configs
 
+import "github.com/spf13/viper"
+
 // WorkspaceFiles contains raw configs definition files for Workspace and it Applications
 type WorkspaceFiles struct {
 	FileRaw
-	Apps []FileRaw
+	ApplicationsFiles
+	Root string
 }
+
+type ApplicationsFiles map[AppName]FileRaw
 
 // TODO: set FileRaw.Config to viper.Viper
 // 	usage for update will be FileRaw.Config.Set('key', 'value')
@@ -14,17 +19,19 @@ type FileRaw struct {
 	Content    []byte
 	Parsed     bool
 	Definition string
-	Config     interface{}
+	Config     *viper.Viper
 }
 
 /////////// CONSTANTS //////////////////
 const (
-	workspaceFileName   = "*.workspace.yaml"
-	applicationFileName = "*.application.yaml"
+	workspace           = "workspace"
+	application         = "application"
+	workspaceFileName   = "*." + workspace + ".yaml"
+	applicationFileName = "*." + application + ".yaml"
 )
 
 /////////// Configs ////////////////////
-// MainCliYaml is yaml for main cli settings $HOME/.inspr/inspr.config.yaml
+// ??: MainCliYaml is yaml for main cli settings $HOME/.inspr/inspr.config.yaml
 type MainCliYaml struct {
 	Version string `yaml:"version"`
 	Account string `yaml:"account"`

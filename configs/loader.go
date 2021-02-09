@@ -2,55 +2,56 @@ package configs
 
 import (
 	"errors"
+	"fmt"
+	"github.com/spf13/viper"
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 )
 
-func (w *WorkspaceFiles) Load(entity string) *ConfigError {
+// Set FileRaw values
+func (f *FileRaw) load(path string, definition string) {
+	f.Path = path
+	f.Definition = definition
+	f.Config = viper.New()
+
+	fmt.Printf("Load file: \n\t path: %s \n\t type: %s\n", f.Path, f.Definition)
+
+}
+
+// Loads workspace and all application configs inside `WorkspaceConfig.AppsDir` and 2 level down
+func (w *WorkspaceFiles) Load() *ConfigError {
 	var matches []string
-
-	switch entity {
-
-	case "workspace":
-		pattern := "/" + workspaceFileName
-		root := toAbsolute("")
-		w.Definition = "workspace"
-
-		matches, _ = filepath.Glob(path.Join(root + pattern))
-
-		if len(matches) == 0 {
-			w.Path = root
-			return &ConfigError{
-				Err: errors.New("file doesn't exist"),
-			}
-		} else {
-			w.Path = matches[0]
-		}
-		return nil
-	case "applications":
-		pattern := "/" + applicationFileName
-
-		if w.Path == "" {
-			return &ConfigError{
-				Err: errors.New("can't load application outside Workspace"),
-			}
-		}
-		matches, _ = filepath.Glob(path.Join(w.Path, "**/**", pattern))
-
-		for _, p := range matches {
-			app := FileRaw{
-				Path:       p,
-				Definition: "application",
-			}
-
-			w.Apps = append(w.Apps, app)
-		}
-		return nil
+	// set Default
+	if w.Root == "" {
+		w.Root = toAbsolute("") // cwd
 	}
-	return &ConfigError{
-		Err: errors.New("failed to load " + entity + "  config['s]"),
+	w.ApplicationsFiles = map[AppName]FileRaw{}
+
+	// Load Workspace
+	pattern := "/" + workspaceFileName
+	matches, _ = filepath.Glob(path.Join(w.Root + pattern))
+	if len(matches) == 0 {
+		return &ConfigError{
+			Err: errors.New("file doesn't exist"),
+		}
 	}
+	w.load(matches[0], workspace)
+
+	// load Applications
+	appPattern := "/" + applicationFileName
+	matches, _ = filepath.Glob(path.Join(w.Root, "**/**", appPattern))
+	for _, match := range matches {
+		name := AppName(strings.Split(path.Base(match), ".")[0])
+
+		app := FileRaw{}
+		app.load(match, application)
+
+		w.ApplicationsFiles[name] = app
+	}
+
+	return nil
 }
 
 // return absolute path, wd in case of - ""

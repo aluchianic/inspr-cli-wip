@@ -1,7 +1,6 @@
 package configs
 
 import (
-	"errors"
 	"fmt"
 	"github.com/spf13/viper"
 	"os"
@@ -17,9 +16,11 @@ func (f *FileRaw) Create(name string) *ConfigError {
 
 	switch f.Definition {
 
-	case "workspace":
+	case workspace:
+		f.load(path.Join(f.Path, name), f.Definition)
+
 		v.AddConfigPath(f.Path)
-		v.SetConfigName(name + ".workspace")
+		v.SetConfigName(name + "." + workspace)
 		v.SetDefault("AppsDir", "apps")
 		v.SetDefault("Description", "Your description goes here")
 		v.SetDefault("Applications", []string{})
@@ -29,11 +30,11 @@ func (f *FileRaw) Create(name string) *ConfigError {
 				Message: "Failed to create directories",
 			}
 		}
-	case "application":
-		f.Path = path.Join(f.Path, name)
+	case application:
+		f.load(path.Join(f.Path, name), f.Definition)
 
 		v.AddConfigPath(f.Path)
-		v.SetConfigName(name + ".application")
+		v.SetConfigName(name + "." + application)
 		v.SetDefault("Depends", []string{})
 		v.SetDefault("Description", "Add your Application description")
 		v.SetDefault("Channels", &ChannelYaml{})
@@ -45,29 +46,11 @@ func (f *FileRaw) Create(name string) *ConfigError {
 		}
 	}
 
-	_ = v.MergeInConfig()
-	if err := v.SafeWriteConfig(); err != nil {
-		return &ConfigError{
-			Err:     err,
-			Message: "failed to create Config",
-		}
-	}
-	if err := v.ReadInConfig(); err != nil {
-		return &ConfigError{
-			Err:     err,
-			Message: "failed to read config",
-		}
-	}
-	if v.ConfigFileUsed() == "" {
-		return &ConfigError{
-			Err:     errors.New("config file still not found"),
-			Message: "config file still not found",
-		}
+	if err := f.parse(); err != nil {
+		return err
 	}
 
-	f.Path = v.ConfigFileUsed()
 	fmt.Printf("Created new '%s' config file: %s \n", f.Definition, f.Path)
-
 	return nil
 }
 
