@@ -8,6 +8,7 @@ import (
 )
 
 var (
+	workspace = configs.WorkspaceFiles{}
 	// rootCmd represents the base command when called without any subcommands
 	rootCmd = &cobra.Command{
 		Use:   "inspr",
@@ -27,9 +28,4 @@ func Execute() {
 
 func init() {
 
-	cobra.OnInitialize(func() {
-		configs.InitCLi()
-	}, func() {
-		configs.InitWorkspace()
-	})
 }

@@ -50,28 +50,3 @@ For all commands besides help/version you need to have a workspace config, which
 ```js 
     // --path [-p] ----> OS environment variable: INSPR_WorkspaceDir ---->  ~/current/dir/[any-name].workspace.yaml
 ```
-
-
-
-
-
- 
-
-
-
-```bash
-    Configs setup:
-                          
-       N - any name,                            
-                          
-                               _--------------------_
-    -  [N].workspace.yaml ---->|  appsDir: /app     | 
-                               |  applications: []A | 
-                                --------------------
-    
-                                     _--------------------_
-    -  app/[A].application.yaml ---->|  name: A           | 
-                                     |  channels: C       | 
-                                      --------------------
-
-```

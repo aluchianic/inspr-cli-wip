@@ -21,8 +21,12 @@ func (e *ConfigError) AlreadyExists() bool {
 }
 
 func (e *ConfigError) NotFound() bool {
-	_, ok := e.Err.(viper.ConfigFileNotFoundError)
-	return ok
+	//_, ok := e.Err.(viper.ConfigFileNotFoundError)
+	//return ok
+	if e.Error() == "file doesn't exist" {
+		return true
+	}
+	return false
 }
 
 func ShowAndExistIfErrorExists(e *ConfigError) {
