@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	//"fmt"
 	"github.com/spf13/cobra"
 	"inspr-cli/configs"
@@ -27,5 +28,7 @@ var deployCommand = &cobra.Command{
 		w := configs.WorkspaceFiles{}
 		configs.ShowAndExistIfErrorExists(w.Load())
 		configs.ShowAndExistIfErrorExists(w.Parse())
+
+		fmt.Printf("Workspace-1 config: \n\t%v\n", w)
 	},
 }

@@ -9,19 +9,6 @@ import (
 	"strings"
 )
 
-// Set RawConfig values
-func (f *RawConfig) load(path string, definition string) {
-	f.Path = path
-	f.Definition = definition
-	f.Config = viper.New()
-
-	fmt.Printf("Load file: \n\t path: %s \n\t type: %s\n", f.Path, f.Definition)
-}
-
-func (f *RawConfig) name() string {
-	return path.Base(f.Path)
-}
-
 // Loads workspace and all application configs inside `WorkspaceConfig.AppsDir` and 2 level down
 func (w *WorkspaceFiles) Load() *ConfigError {
 	var matches []string
@@ -50,6 +37,20 @@ func (w *WorkspaceFiles) Load() *ConfigError {
 	}
 
 	return nil
+}
+
+// Set RawConfig values
+func (f *RawConfig) load(path string, definition string) {
+	f.Path = path
+	f.Definition = definition
+	f.Config = viper.New()
+
+	fmt.Printf("Load file: \n\t path: %s \n\t type: %s\n", f.Path, f.Definition)
+}
+
+// Returns filename for current config file
+func (f *RawConfig) name() string {
+	return path.Base(f.Path)
 }
 
 // return absolute path, wd in case of - ""

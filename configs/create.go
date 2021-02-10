@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 )
 
+// Sets default values and creates new config file
 func (f *RawConfig) Create(name string, relativePath string, definition string) *ConfigError {
 	filename := name + "." + definition + ".yaml"
 
@@ -44,6 +45,20 @@ func (f *RawConfig) Create(name string, relativePath string, definition string) 
 	return nil
 }
 
+// Creates new config file based on its' Path
+func (f *RawConfig) create() *ConfigError {
+	err := f.Config.MergeInConfig()
+	if err = f.Config.SafeWriteConfigAs(f.Path); err != nil {
+		return &ConfigError{
+			Err:     err,
+			Message: "failed to create new `" + f.Definition + "` config, under: " + f.Path,
+		}
+	}
+
+	return nil
+}
+
+// Create directories recursively
 func createDirs(path string) error {
 	dir, _ := filepath.Split(path)
 	return os.MkdirAll(dir, os.ModePerm)

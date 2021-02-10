@@ -96,15 +96,3 @@ func (f *RawConfig) read() *ConfigError {
 
 	return nil
 }
-
-func (f *RawConfig) create() *ConfigError {
-	err := f.Config.MergeInConfig()
-	if err = f.Config.SafeWriteConfigAs(f.Path); err != nil {
-		return &ConfigError{
-			Err:     err,
-			Message: "failed to create new `" + f.Definition + "` config, under: " + f.Path,
-		}
-	}
-
-	return nil
-}
