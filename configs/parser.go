@@ -6,7 +6,7 @@ import (
 
 // parses config file according to it 'Definition'
 func (w *WorkspaceFiles) Parse() *ConfigError {
-	fileRaw := &w.FileRaw
+	fileRaw := w.RawConfig
 	if err := fileRaw.parse(); err != nil {
 		return err
 	}
@@ -23,7 +23,23 @@ func (w *WorkspaceFiles) Parse() *ConfigError {
 	return nil
 }
 
-func (f *FileRaw) parse() *ConfigError {
+func (w *WorkspaceFiles) getApp(name string) (*RawConfig, *ConfigError) {
+	if name == "" {
+		return &w.RawConfig, nil
+	}
+
+	files := w.ApplicationsFiles
+	if _, ok := files[AppName(name)]; !ok {
+		return nil, &ConfigError{
+			Message: "Application `" + name + "` not defined in config",
+		}
+	}
+	fileRaw := files[AppName(name)]
+
+	return &fileRaw, nil
+}
+
+func (f *RawConfig) parse() *ConfigError {
 	var i interface{}
 
 	switch f.Definition {
@@ -44,12 +60,12 @@ func (f *FileRaw) parse() *ConfigError {
 	}
 
 	f.Parsed = true
-	fmt.Printf("%s config parsed : \n\t %+v \n", f.Definition, f.Config.ConfigFileUsed())
+	fmt.Printf("Config parsed : \n\t type: %s \n\t path: %s\n", f.Definition, f.Config.ConfigFileUsed())
 
 	return nil
 }
 
-func (f *FileRaw) unmarshal(i interface{}) *ConfigError {
+func (f *RawConfig) unmarshal(i interface{}) *ConfigError {
 	if err := f.Config.Unmarshal(&i); err != nil {
 		return &ConfigError{
 			Err:     err,
@@ -60,7 +76,7 @@ func (f *FileRaw) unmarshal(i interface{}) *ConfigError {
 	return nil
 }
 
-func (f *FileRaw) read() *ConfigError {
+func (f *RawConfig) read() *ConfigError {
 	f.Config.SetConfigFile(f.Path)
 
 	err := f.Config.MergeInConfig()
@@ -81,14 +97,14 @@ func (f *FileRaw) read() *ConfigError {
 	return nil
 }
 
-func (w *WorkspaceFiles) getApp(name string) (*FileRaw, *ConfigError) {
-	files := w.ApplicationsFiles
-	if _, ok := files[AppName(name)]; !ok {
-		return nil, &ConfigError{
-			Message: "Application `" + name + "` not defined in config",
+func (f *RawConfig) create() *ConfigError {
+	err := f.Config.MergeInConfig()
+	if err = f.Config.SafeWriteConfigAs(f.Path); err != nil {
+		return &ConfigError{
+			Err:     err,
+			Message: "failed to create new `" + f.Definition + "` config, under: " + f.Path,
 		}
 	}
-	fileRaw := files[AppName(name)]
 
-	return &fileRaw, nil
+	return nil
 }

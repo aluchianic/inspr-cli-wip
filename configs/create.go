@@ -2,51 +2,41 @@ package configs
 
 import (
 	"fmt"
-	"github.com/spf13/viper"
 	"os"
 	"path"
+	"path/filepath"
 )
 
-func (f *FileRaw) Create(name string) *ConfigError {
-	if f.Path == "" {
-		panic(fmt.Errorf("can't create config, not path provided"))
-	}
-	v := viper.New()
-	v.SetConfigType("yaml")
+func (f *RawConfig) Create(name string, relativePath string, definition string) *ConfigError {
+	filename := name + "." + definition + ".yaml"
 
-	switch f.Definition {
+	switch definition {
 
 	case workspace:
-		f.load(path.Join(f.Path, name), f.Definition)
+		f.load(path.Join(relativePath, filename), definition)
 
-		v.AddConfigPath(f.Path)
-		v.SetConfigName(name + "." + workspace)
-		v.SetDefault("AppsDir", "apps")
-		v.SetDefault("Description", "Your description goes here")
-		v.SetDefault("Applications", []string{})
-
-		if err := createDirs(f.Path); err != nil {
-			return &ConfigError{
-				Message: "Failed to create directories",
-			}
-		}
+		f.Config.SetDefault("AppsDir", "apps")
+		f.Config.SetDefault("Description", "Your description goes here")
+		f.Config.SetDefault("Applications", []AppName{})
 	case application:
-		f.load(path.Join(f.Path, name), f.Definition)
+		f.load(path.Join(relativePath, name, filename), definition)
 
-		v.AddConfigPath(f.Path)
-		v.SetConfigName(name + "." + application)
-		v.SetDefault("Depends", []string{})
-		v.SetDefault("Description", "Add your Application description")
-		v.SetDefault("Channels", &ChannelYaml{})
-
-		if err := createDirs(f.Path); err != nil {
-			return &ConfigError{
-				Message: "Failed to create directories",
-			}
+		f.Config.SetDefault("Depends", []string{})
+		f.Config.SetDefault("Description", "Add your Application description")
+		f.Config.SetDefault("Channels", &ChannelYaml{})
+	default:
+		return &ConfigError{
+			Message: "unknown definition: '" + definition + "'",
 		}
 	}
 
-	if err := f.parse(); err != nil {
+	if err := createDirs(f.Path); err != nil {
+		return &ConfigError{
+			Message: "Failed to create directories for: " + f.Path,
+		}
+	}
+
+	if err := f.create(); err != nil {
 		return err
 	}
 
@@ -55,5 +45,6 @@ func (f *FileRaw) Create(name string) *ConfigError {
 }
 
 func createDirs(path string) error {
-	return os.MkdirAll(path, os.ModePerm)
+	dir, _ := filepath.Split(path)
+	return os.MkdirAll(dir, os.ModePerm)
 }

@@ -4,17 +4,15 @@ import "github.com/spf13/viper"
 
 // WorkspaceFiles contains raw configs definition files for Workspace and it Applications
 type WorkspaceFiles struct {
-	FileRaw
+	RawConfig
 	ApplicationsFiles
 	Root string
 }
 
-type ApplicationsFiles map[AppName]FileRaw
+type ApplicationsFiles map[AppName]RawConfig
 
-// TODO: set FileRaw.Config to viper.Viper
-// 	usage for update will be FileRaw.Config.Set('key', 'value')
 // Raw config definition files
-type FileRaw struct {
+type RawConfig struct {
 	Path       string
 	Content    []byte
 	Parsed     bool

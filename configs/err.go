@@ -21,12 +21,15 @@ func (e *ConfigError) AlreadyExists() bool {
 }
 
 func (e *ConfigError) NotFound() bool {
-	//_, ok := e.Err.(viper.ConfigFileNotFoundError)
-	//return ok
-	if e.Error() == "file doesn't exist" {
-		return true
+	_, ok := e.Err.(viper.ConfigFileNotFoundError)
+	return ok
+}
+
+func ErrNotFound(definition string, path string) *ConfigError {
+	return &ConfigError{
+		Err:     viper.ConfigFileNotFoundError{},
+		Message: "`" + definition + "` file not found in: " + path,
 	}
-	return false
 }
 
 func ShowAndExistIfErrorExists(e *ConfigError) {
