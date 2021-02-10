@@ -18,6 +18,6 @@ var hubFindCmd = &cobra.Command{
 		author := "A. S. Puskin"
 		desc := "Returns name of planet named after author."
 
-		fmt.Printf("app '%s' \n author %s \n description %s", name, author, desc)
+		fmt.Printf("apps '%s' \n author %s \n description %s", name, author, desc)
 	},
 }

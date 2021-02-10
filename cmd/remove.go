@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"inspr-cli/configs"
 )
 
 var force bool
@@ -10,7 +9,7 @@ var force bool
 func init() {
 	rootCmd.AddCommand(removeCmd)
 
-	configs.AddPathFlag(removeCmd)
+	//configs.AddPathFlag(removeCmd)
 
 	removeCmd.Flags().BoolVarP(&force, "force", "f", false, "Remove dApp without graceful shutdown of service.")
 	// --safe [--default]
