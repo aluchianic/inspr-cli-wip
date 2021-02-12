@@ -1,8 +1,6 @@
 package configs
 
-import (
-	"fmt"
-)
+import "go.uber.org/zap"
 
 // parses config file according to it 'Definition'
 func (w *WorkspaceFiles) Parse() *ConfigError {
@@ -60,7 +58,8 @@ func (f *RawConfig) parse() *ConfigError {
 	}
 
 	f.Parsed = true
-	fmt.Printf("Config parsed : \n\t type: %s \n\t path: %s\n", f.Definition, f.Config.ConfigFileUsed())
+
+	f.Logger.Info("Parsed config", zap.String("path", f.Config.ConfigFileUsed()), zap.String("type", f.Definition))
 
 	return nil
 }

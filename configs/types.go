@@ -1,6 +1,9 @@
 package configs
 
-import "github.com/spf13/viper"
+import (
+	"github.com/spf13/viper"
+	"go.uber.org/zap"
+)
 
 // WorkspaceFiles contains raw configs definition files for Workspace and it Applications
 type WorkspaceFiles struct {
@@ -18,6 +21,7 @@ type RawConfig struct {
 	Parsed     bool
 	Definition string
 	Config     *viper.Viper
+	Logger     *zap.Logger
 }
 
 /////////// CONSTANTS //////////////////

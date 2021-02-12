@@ -1,7 +1,8 @@
 package configs
 
 import (
-	"fmt"
+	"go.uber.org/zap"
+	"inspr-cli/logging"
 	"os"
 	"path"
 	"path/filepath"
@@ -9,18 +10,21 @@ import (
 
 // Sets default values and creates new config file
 func (f *RawConfig) Create(name string, relativePath string, definition string) *ConfigError {
-	filename := name + "." + definition + ".yaml"
+	var (
+		filename = name + "." + definition + ".yaml"
+		logger   = logging.Logger()
+	)
 
 	switch definition {
 
 	case workspace:
-		f.load(path.Join(relativePath, filename), definition)
+		f.load(path.Join(relativePath, filename), definition, logger)
 
 		f.Config.SetDefault("AppsDir", "apps")
 		f.Config.SetDefault("Description", "Your description goes here")
 		f.Config.SetDefault("Applications", []AppName{})
 	case application:
-		f.load(path.Join(relativePath, name, filename), definition)
+		f.load(path.Join(relativePath, name, filename), definition, logger)
 
 		f.Config.SetDefault("Depends", []string{})
 		f.Config.SetDefault("Description", "Add your Application description")
@@ -41,7 +45,7 @@ func (f *RawConfig) Create(name string, relativePath string, definition string) 
 		return err
 	}
 
-	fmt.Printf("Created new '%s' config file: %s \n", f.Definition, f.Path)
+	f.Logger.Info("Created new config", zap.String("path", f.Path), zap.String("type", f.Definition))
 	return nil
 }
 

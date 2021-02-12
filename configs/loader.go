@@ -1,8 +1,9 @@
 package configs
 
 import (
-	"fmt"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
+	"inspr-cli/logging"
 	"os"
 	"path"
 	"path/filepath"
@@ -11,19 +12,22 @@ import (
 
 // Loads workspace and all application configs inside `WorkspaceConfig.AppsDir` and 2 level down
 func (w *WorkspaceFiles) Load() *ConfigError {
-	var matches []string
+	var (
+		logger  = logging.Logger()
+		matches []string
+	)
 	// set Default
 	if w.Root == "" {
 		w.Root = toAbsolute("") // cwd
 	}
-	w.ApplicationsFiles = map[AppName]RawConfig{}
+	w.ApplicationsFiles = ApplicationsFiles{}
 
 	// Load Workspace
 	matches, _ = filepath.Glob(path.Join(w.Root, workspaceFileName))
 	if len(matches) == 0 {
 		return ErrNotFound(workspace, w.Root)
 	}
-	w.load(matches[0], workspace)
+	w.load(matches[0], workspace, logger)
 
 	// load Applications
 	matches, _ = filepath.Glob(path.Join(w.Root, "**/**", applicationFileName))
@@ -31,7 +35,8 @@ func (w *WorkspaceFiles) Load() *ConfigError {
 		name := AppName(strings.Split(path.Base(match), ".")[0])
 
 		app := RawConfig{}
-		app.load(match, application)
+		app.load(match, application, logger)
+		app.Logger = logger
 
 		w.ApplicationsFiles[name] = app
 	}
@@ -40,17 +45,18 @@ func (w *WorkspaceFiles) Load() *ConfigError {
 }
 
 // Set RawConfig values
-func (f *RawConfig) load(path string, definition string) {
+func (f *RawConfig) load(path string, definition string, logger *zap.Logger) {
 	f.Path = path
 	f.Definition = definition
 	f.Config = viper.New()
+	f.Logger = logger
 
-	fmt.Printf("Load file: \n\t path: %s \n\t type: %s\n", f.Path, f.Definition)
+	f.Logger.Info("Loaded config", zap.String("path", f.Path), zap.String("type", f.Definition))
 }
 
-// Returns filename for current config file
+// Returns config name based on filename
 func (f *RawConfig) name() string {
-	return path.Base(f.Path)
+	return strings.Split(path.Base(f.Path), ".")[0]
 }
 
 // return absolute path, wd in case of - ""
