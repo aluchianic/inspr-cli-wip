@@ -66,10 +66,7 @@ func (f *RawConfig) parse() *ConfigError {
 
 func (f *RawConfig) unmarshal(i interface{}) *ConfigError {
 	if err := f.Config.Unmarshal(&i); err != nil {
-		return &ConfigError{
-			Err:     err,
-			Message: "failed to unmarshal `" + f.Path + "`",
-		}
+		f.Logger.Error("failed to unmarshal", zap.String("path", f.Config.ConfigFileUsed()), zap.String("type", f.Definition))
 	}
 
 	return nil
@@ -78,19 +75,11 @@ func (f *RawConfig) unmarshal(i interface{}) *ConfigError {
 func (f *RawConfig) read() *ConfigError {
 	f.Config.SetConfigFile(f.Path)
 
-	err := f.Config.MergeInConfig()
-	if err != nil {
-		return &ConfigError{
-			Err:     err,
-			Message: "failed to merge config",
-		}
+	if err := f.Config.MergeInConfig(); err != nil {
+		f.Logger.Error("failed to merge config", zap.String("path", f.Config.ConfigFileUsed()), zap.String("type", f.Definition))
 	}
-
 	if err := f.Config.ReadInConfig(); err != nil {
-		return &ConfigError{
-			Err:     err,
-			Message: "failed to read config",
-		}
+		f.Logger.Error("failed to read config", zap.String("path", f.Config.ConfigFileUsed()), zap.String("type", f.Definition))
 	}
 
 	return nil

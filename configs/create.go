@@ -11,36 +11,31 @@ import (
 // Sets default values and creates new config file
 func (f *RawConfig) Create(name string, relativePath string, definition string) *ConfigError {
 	var (
-		filename = name + "." + definition + ".yaml"
-		logger   = logging.Logger()
+		configPath string
+		filename   = name + "." + definition + ".yaml"
+		logger     = logging.Logger()
 	)
 
 	switch definition {
 	case workspace:
-		f.load(path.Join(relativePath, filename), definition, logger)
+		configPath = path.Join(relativePath, filename)
 	case application:
-		f.load(path.Join(relativePath, name, filename), definition, logger)
-	default:
-		f.Logger.Fatal("Unknown definition for config", zap.String("type", f.Definition))
+		configPath = path.Join(relativePath, name, filename)
 	}
 
+	f.load(configPath, definition, logger)
 	return f.create()
 }
 
 // Creates new config file based on its' Path
 func (f *RawConfig) create() *ConfigError {
 	if err := createDirs(f.Path); err != nil {
-		return &ConfigError{
-			Message: "Failed to create directories for: " + f.Path,
-		}
+		f.Logger.Error("failed to create directories", zap.String("path", f.Path), zap.String("type", f.Definition))
 	}
 
 	err := f.Config.MergeInConfig()
 	if err = f.Config.SafeWriteConfigAs(f.Path); err != nil {
-		return &ConfigError{
-			Err:     err,
-			Message: "failed to create new `" + f.Definition + "` config, under: " + f.Path,
-		}
+		f.Logger.Error("failed to create new config", zap.String("path", f.Path), zap.String("type", f.Definition))
 	}
 
 	f.Logger.Info("Created new config", zap.String("path", f.Path), zap.String("type", f.Definition))
