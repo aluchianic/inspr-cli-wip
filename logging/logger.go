@@ -2,7 +2,7 @@ package logging
 
 import (
 	"go.uber.org/zap"
-	"log"
+	"os"
 	"os/user"
 	"path"
 )
@@ -10,6 +10,10 @@ import (
 // 			namespace string
 func Logger() *zap.Logger {
 	hd := path.Join(homeDir(), ".inspr")
+	err := os.MkdirAll(hd, os.ModePerm)
+	if err != nil {
+		panic(err)
+	}
 	logPath := path.Join(hd, "log")
 
 	zapConfig := zap.NewDevelopmentConfig()
@@ -31,7 +35,7 @@ func Logger() *zap.Logger {
 func homeDir() string {
 	usr, err := user.Current()
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	return usr.HomeDir
 }

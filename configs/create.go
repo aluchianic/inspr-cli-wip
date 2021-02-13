@@ -16,41 +16,25 @@ func (f *RawConfig) Create(name string, relativePath string, definition string) 
 	)
 
 	switch definition {
-
 	case workspace:
 		f.load(path.Join(relativePath, filename), definition, logger)
-
-		f.Config.SetDefault("AppsDir", "apps")
-		f.Config.SetDefault("Description", "Your description goes here")
-		f.Config.SetDefault("Applications", []AppName{})
 	case application:
 		f.load(path.Join(relativePath, name, filename), definition, logger)
-
-		f.Config.SetDefault("Depends", []string{})
-		f.Config.SetDefault("Description", "Add your Application description")
-		f.Config.SetDefault("Channels", &ChannelYaml{})
 	default:
-		return &ConfigError{
-			Message: "unknown definition: '" + definition + "'",
-		}
+		f.Logger.Fatal("Unknown definition for config", zap.String("type", f.Definition))
 	}
 
+	return f.create()
+}
+
+// Creates new config file based on its' Path
+func (f *RawConfig) create() *ConfigError {
 	if err := createDirs(f.Path); err != nil {
 		return &ConfigError{
 			Message: "Failed to create directories for: " + f.Path,
 		}
 	}
 
-	if err := f.create(); err != nil {
-		return err
-	}
-
-	f.Logger.Info("Created new config", zap.String("path", f.Path), zap.String("type", f.Definition))
-	return nil
-}
-
-// Creates new config file based on its' Path
-func (f *RawConfig) create() *ConfigError {
 	err := f.Config.MergeInConfig()
 	if err = f.Config.SafeWriteConfigAs(f.Path); err != nil {
 		return &ConfigError{
@@ -58,6 +42,8 @@ func (f *RawConfig) create() *ConfigError {
 			Message: "failed to create new `" + f.Definition + "` config, under: " + f.Path,
 		}
 	}
+
+	f.Logger.Info("Created new config", zap.String("path", f.Path), zap.String("type", f.Definition))
 
 	return nil
 }

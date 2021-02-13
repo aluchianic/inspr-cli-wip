@@ -45,11 +45,25 @@ func (w *WorkspaceFiles) Load() *ConfigError {
 }
 
 // Set RawConfig values
-func (f *RawConfig) load(path string, definition string, logger *zap.Logger) {
-	f.Path = path
+// TODO: replace configPath \w []string{} - patterns
+func (f *RawConfig) load(configPath string, definition string, logger *zap.Logger) {
+	f.Path = configPath
 	f.Definition = definition
 	f.Config = viper.New()
 	f.Logger = logger
+
+	switch definition {
+	case workspace:
+		f.Config.SetDefault("AppsDir", "apps")
+		f.Config.SetDefault("Description", "Your description goes here")
+		f.Config.SetDefault("Applications", []AppName{})
+	case application:
+		f.Config.SetDefault("Depends", []string{})
+		f.Config.SetDefault("Description", "Add your Application description")
+		f.Config.SetDefault("Channels", &ChannelYaml{})
+	default:
+		f.Logger.Fatal("Unknown definition for config", zap.String("type", f.Definition))
+	}
 
 	f.Logger.Info("Loaded config", zap.String("path", f.Path), zap.String("type", f.Definition))
 }
