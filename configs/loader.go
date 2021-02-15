@@ -53,6 +53,14 @@ func (w *WorkspaceFiles) search(name string) *RawConfig {
 	return nil
 }
 
+// Return `appsDir` value from config
+func (w *WorkspaceFiles) getAppsDir() string {
+	if !w.Parsed {
+		w.Logger.Fatal("can't retrieve values before parsing, use Parse() method first")
+	}
+	return w.Config.GetString("AppsDir")
+}
+
 // Validate and initialize WorkspaceFiles struct
 func (w *WorkspaceFiles) init() {
 	w.Root = toAbsolute(w.Root)
@@ -60,14 +68,6 @@ func (w *WorkspaceFiles) init() {
 		w.ApplicationsFiles = ApplicationsFiles{}
 	}
 
-}
-
-// Return `appsDir` value from config
-func (w *WorkspaceFiles) getAppsDir() string {
-	if !w.Parsed {
-		w.Logger.Fatal("can't retrieve values before parsing, use Parse() method first")
-	}
-	return w.Config.GetString("AppsDir")
 }
 
 // Validate and initialize RawConfig struct
