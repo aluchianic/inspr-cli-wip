@@ -1,54 +1,27 @@
 package configs
 
-import "go.uber.org/zap"
+import (
+	"go.uber.org/zap"
+)
 
 // parses config file according to it 'Definition'
 func (w *WorkspaceFiles) Parse() *ConfigError {
-	fileRaw := w.RawConfig
-	if err := fileRaw.parse(); err != nil {
+	// parse workspace
+	if err := w.RawConfig.parse(WorkspaceYaml{}); err != nil {
 		return err
 	}
 
-	for _, name := range w.Config.GetStringSlice("Applications") {
-		fileRaw, err := w.getApp(name)
-		if err != nil {
-			return err
-		}
-		if err := fileRaw.parse(); err != nil {
+	// parse application
+	for _, fileRaw := range w.ApplicationsFiles {
+		if err := fileRaw.parse(ApplicationYaml{}); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
-func (w *WorkspaceFiles) getApp(name string) (*RawConfig, *ConfigError) {
-	if name == "" {
-		return &w.RawConfig, nil
-	}
-
-	files := w.ApplicationsFiles
-	if _, ok := files[AppName(name)]; !ok {
-		return nil, &ConfigError{
-			Message: "Application `" + name + "` not defined in config",
-		}
-	}
-	fileRaw := files[AppName(name)]
-
-	return &fileRaw, nil
-}
-
-func (f *RawConfig) parse() *ConfigError {
-	var i interface{}
-
-	switch f.Definition {
-	case application:
-		i = ApplicationYaml{}
-		break
-	case workspace:
-		i = WorkspaceFiles{}
-		break
-	}
-
+func (f *RawConfig) parse(i interface{}) *ConfigError {
 	if err := f.unmarshal(&i); err != nil {
 		return err
 	}
