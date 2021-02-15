@@ -23,15 +23,15 @@ var (
 				err := workspace.Create(args[0], "workspace")
 				configs.ShowAndExistIfErrorExists(err)
 			}
+			// Parse workspace to get config definition
+			err = workspace.Parse()
+			configs.ShowAndExistIfErrorExists(err)
 
 			for _, app := range apps {
 				err := workspace.Create(app, "application")
 				configs.ShowAndExistIfErrorExists(err)
 			}
 
-			// Parse workspace to get config definition
-			err = workspace.Parse()
-			configs.ShowAndExistIfErrorExists(err)
 		},
 	}
 )

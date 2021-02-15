@@ -17,6 +17,7 @@ func (w *WorkspaceFiles) Create(name string, definition string) *ConfigError {
 	var rawConfig = RawConfig{}
 
 	rawConfig.init(definition)
+	rawConfig.setConfigDefaults()
 	rawConfig.load(w.createPath(name, definition))
 
 	if definition == workspace {
@@ -44,6 +45,21 @@ func (f *RawConfig) create() *ConfigError {
 	return nil
 }
 
+// Sets default values for Configs
+func (f *RawConfig) setConfigDefaults() {
+	f.Logger.Info("Setting config defaults", zap.String("type", f.Definition))
+	switch f.Definition {
+	case workspace:
+		f.Config.SetDefault("AppsDir", "apps")
+		f.Config.SetDefault("Description", "Your description goes here")
+		f.Config.SetDefault("Applications", []AppName{})
+	case application:
+		f.Config.SetDefault("Depends", []string{})
+		f.Config.SetDefault("Description", "Add your Application description")
+		f.Config.SetDefault("Channels", &ChannelYaml{})
+	}
+}
+
 // Create directories recursively
 func createDirs(path string) error {
 	dir, _ := filepath.Split(path)
@@ -58,7 +74,7 @@ func (w *WorkspaceFiles) createPath(name string, definition string) string {
 	case workspace:
 		return path.Join(w.Root, filename)
 	case application:
-		return path.Join(w.Root, w.Config.GetString("AppsDir"), name, filename)
+		return path.Join(w.Root, w.getAppsDir(), name, filename)
 	default:
 		return ""
 	}

@@ -62,6 +62,14 @@ func (w *WorkspaceFiles) init() {
 
 }
 
+// Return `appsDir` value from config
+func (w *WorkspaceFiles) getAppsDir() string {
+	if !w.Parsed {
+		w.Logger.Fatal("can't retrieve values before parsing, use Parse() method first")
+	}
+	return w.Config.GetString("AppsDir")
+}
+
 // Validate and initialize RawConfig struct
 func (f *RawConfig) init(definition string) {
 	// lazy load logger
@@ -69,9 +77,8 @@ func (f *RawConfig) init(definition string) {
 		logger = logging.Logger()
 		logger.Info("lazy load logger")
 	}
-
-	f.Config = viper.New()
 	f.Logger = logger
+	f.Config = viper.New()
 
 	switch definition {
 	case workspace:
@@ -81,8 +88,6 @@ func (f *RawConfig) init(definition string) {
 	default:
 		f.Logger.Fatal("Unknown definition for config", zap.String("type", definition))
 	}
-
-	f.setConfigDefaults()
 }
 
 // Set RawConfig values
@@ -90,21 +95,6 @@ func (f *RawConfig) load(configPath string) {
 	f.Path = configPath
 
 	f.Logger.Info("Loaded config", zap.String("path", f.Path), zap.String("type", f.Definition))
-}
-
-// Sets default values for Configs
-func (f *RawConfig) setConfigDefaults() {
-	f.Logger.Info("Setting config defaults", zap.String("type", f.Definition))
-	switch f.Definition {
-	case workspace:
-		f.Config.SetDefault("AppsDir", "apps")
-		f.Config.SetDefault("Description", "Your description goes here")
-		f.Config.SetDefault("Applications", []AppName{})
-	case application:
-		f.Config.SetDefault("Depends", []string{})
-		f.Config.SetDefault("Description", "Add your Application description")
-		f.Config.SetDefault("Channels", &ChannelYaml{})
-	}
 }
 
 // Adds application to WorkspaceFiles struct
