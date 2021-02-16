@@ -1,6 +1,9 @@
 package configs
 
-import "github.com/spf13/viper"
+import (
+	"github.com/spf13/viper"
+	"go.uber.org/zap"
+)
 
 // WorkspaceFiles contains raw configs definition files for Workspace and it Applications
 type WorkspaceFiles struct {
@@ -14,10 +17,11 @@ type ApplicationsFiles map[AppName]RawConfig
 // Raw config definition files
 type RawConfig struct {
 	Path       string
-	Content    []byte
+	Content    []byte // to used since configs are stored in memory (Viper)
 	Parsed     bool
 	Definition string
 	Config     *viper.Viper
+	Logger     *zap.SugaredLogger
 }
 
 /////////// CONSTANTS //////////////////

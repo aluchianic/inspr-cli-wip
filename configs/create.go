@@ -1,65 +1,78 @@
 package configs
 
 import (
-	"fmt"
+	"inspr-cli/logging"
 	"os"
 	"path"
 	"path/filepath"
 )
 
-// Sets default values and creates new config file
-func (f *RawConfig) Create(name string, relativePath string, definition string) *ConfigError {
-	filename := name + "." + definition + ".yaml"
-
-	switch definition {
-
-	case workspace:
-		f.load(path.Join(relativePath, filename), definition)
-
-		f.Config.SetDefault("AppsDir", "apps")
-		f.Config.SetDefault("Description", "Your description goes here")
-		f.Config.SetDefault("Applications", []AppName{})
-	case application:
-		f.load(path.Join(relativePath, name, filename), definition)
-
-		f.Config.SetDefault("Depends", []string{})
-		f.Config.SetDefault("Description", "Add your Application description")
-		f.Config.SetDefault("Channels", &ChannelYaml{})
-	default:
-		return &ConfigError{
-			Message: "unknown definition: '" + definition + "'",
-		}
+// Creates config files and folders
+func (w *WorkspaceFiles) Create(name string, definition string) {
+	if logger == nil {
+		logger = logging.Logger()
 	}
 
-	if err := createDirs(f.Path); err != nil {
-		return &ConfigError{
-			Message: "Failed to create directories for: " + f.Path,
-		}
-	}
+	var rawConfig = RawConfig{}
 
-	if err := f.create(); err != nil {
-		return err
-	}
+	rawConfig.init(definition)
+	rawConfig.setConfigDefaults()
+	rawConfig.load(w.createPath(name, definition))
 
-	fmt.Printf("Created new '%s' config file: %s \n", f.Definition, f.Path)
-	return nil
+	if definition == workspace {
+		w.RawConfig = rawConfig
+	} else {
+		w.addApplication(rawConfig)
+	}
+	rawConfig.create()
 }
 
-// Creates new config file based on its' Path
-func (f *RawConfig) create() *ConfigError {
-	err := f.Config.MergeInConfig()
-	if err = f.Config.SafeWriteConfigAs(f.Path); err != nil {
-		return &ConfigError{
-			Err:     err,
-			Message: "failed to create new `" + f.Definition + "` config, under: " + f.Path,
-		}
+// Creates new config file and directories based on its' Path
+func (cfg *RawConfig) create() {
+	if err := createDirs(cfg.Path); err != nil {
+		cfg.Logger.Fatalf("failed to create directories \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
 	}
 
-	return nil
+	err := cfg.Config.MergeInConfig()
+	if err = cfg.Config.SafeWriteConfigAs(cfg.Path); err != nil {
+		cfg.Logger.Fatalf("failed to create new config \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
+	}
+
+	cfg.Logger.Debugf("Created new config \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
+}
+
+// Sets default values for Configs
+func (cfg *RawConfig) setConfigDefaults() {
+	cfg.Logger.Debugf("Setting config defaults \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
+
+	switch cfg.Definition {
+	case workspace:
+		cfg.Config.SetDefault("AppsDir", "apps")
+		cfg.Config.SetDefault("Description", "Your description goes here")
+		cfg.Config.SetDefault("Applications", []AppName{})
+	case application:
+		cfg.Config.SetDefault("Depends", []string{})
+		cfg.Config.SetDefault("Description", "Add your Application description")
+		cfg.Config.SetDefault("Channels", &ChannelYaml{})
+	}
 }
 
 // Create directories recursively
 func createDirs(path string) error {
 	dir, _ := filepath.Split(path)
 	return os.MkdirAll(dir, os.ModePerm)
+}
+
+// Creates new path to file
+func (w *WorkspaceFiles) createPath(name string, definition string) string {
+	var filename = name + "." + definition + ".yaml"
+
+	switch definition {
+	case workspace:
+		return path.Join(w.Root, filename)
+	case application:
+		return path.Join(w.Root, w.getAppsDir(), name, filename)
+	default:
+		return ""
+	}
 }

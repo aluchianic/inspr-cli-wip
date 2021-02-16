@@ -3,7 +3,6 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"inspr-cli/configs"
-	"path"
 )
 
 var (
@@ -18,23 +17,19 @@ var (
 				//Root: to change root path
 			}
 			err := workspace.Load()
-
 			// Create workspace if not found
 			if err != nil && err.NotFound() {
-				err := workspace.Create(args[0], workspace.Root, "workspace")
-				configs.ShowAndExistIfErrorExists(err)
+				workspace.Create(args[0], "workspace")
+				workspace.Logger.Infof("Created new workspace in: %s", workspace.Path)
 			}
 
-			// Parse workspace to get config definition
-			err = workspace.Parse()
-			configs.ShowAndExistIfErrorExists(err)
-
+			// Parse workspace allowing read content of WorkspaceConfig to create Application
+			workspace.Parse()
 			for _, app := range apps {
-				f := configs.RawConfig{}
-				pathToFolder := path.Join(workspace.Root, workspace.Config.GetString("AppsDir"))
-				err := f.Create(app, pathToFolder, "application")
-				configs.ShowAndExistIfErrorExists(err)
+				workspace.Create(app, "application")
+				workspace.Logger.Infof("Created new application in workspace: %s", workspace.Path)
 			}
+
 		},
 	}
 )

@@ -3,12 +3,10 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"inspr-cli/configs"
 	"os"
 )
 
 var (
-	workspace = configs.WorkspaceFiles{}
 	// rootCmd represents the base command when called without any subcommands
 	rootCmd = &cobra.Command{
 		Use:   "inspr",

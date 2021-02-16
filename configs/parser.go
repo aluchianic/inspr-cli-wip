@@ -1,98 +1,37 @@
 package configs
 
-import (
-	"fmt"
-)
-
 // parses config file according to it 'Definition'
-func (w *WorkspaceFiles) Parse() *ConfigError {
-	fileRaw := w.RawConfig
-	if err := fileRaw.parse(); err != nil {
-		return err
-	}
+func (w *WorkspaceFiles) Parse() {
+	// parse workspace
+	w.RawConfig.parse(WorkspaceYaml{})
 
-	for _, name := range w.Config.GetStringSlice("Applications") {
-		fileRaw, err := w.getApp(name)
-		if err != nil {
-			return err
-		}
-		if err := fileRaw.parse(); err != nil {
-			return err
-		}
+	// parse application
+	for _, fileRaw := range w.ApplicationsFiles {
+		fileRaw.parse(ApplicationYaml{})
 	}
-	return nil
 }
 
-func (w *WorkspaceFiles) getApp(name string) (*RawConfig, *ConfigError) {
-	if name == "" {
-		return &w.RawConfig, nil
-	}
+func (cfg *RawConfig) parse(i interface{}) {
+	cfg.unmarshal(&i)
+	cfg.read()
 
-	files := w.ApplicationsFiles
-	if _, ok := files[AppName(name)]; !ok {
-		return nil, &ConfigError{
-			Message: "Application `" + name + "` not defined in config",
-		}
-	}
-	fileRaw := files[AppName(name)]
-
-	return &fileRaw, nil
+	cfg.Parsed = true
+	cfg.Logger.Debugf("Parsed config \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
 }
 
-func (f *RawConfig) parse() *ConfigError {
-	var i interface{}
-
-	switch f.Definition {
-	case application:
-		i = ApplicationYaml{}
-		break
-	case workspace:
-		i = WorkspaceFiles{}
-		break
+func (cfg *RawConfig) unmarshal(i interface{}) {
+	if err := cfg.Config.Unmarshal(&i); err != nil {
+		cfg.Logger.Fatalf("failed to unmarshal \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
 	}
-
-	if err := f.unmarshal(&i); err != nil {
-		return err
-	}
-
-	if err := f.read(); err != nil {
-		return err
-	}
-
-	f.Parsed = true
-	fmt.Printf("Config parsed : \n\t type: %s \n\t path: %s\n", f.Definition, f.Config.ConfigFileUsed())
-
-	return nil
 }
 
-func (f *RawConfig) unmarshal(i interface{}) *ConfigError {
-	if err := f.Config.Unmarshal(&i); err != nil {
-		return &ConfigError{
-			Err:     err,
-			Message: "failed to unmarshal `" + f.Path + "`",
-		}
+func (cfg *RawConfig) read() {
+	cfg.Config.SetConfigFile(cfg.Path)
+
+	if err := cfg.Config.MergeInConfig(); err != nil {
+		cfg.Logger.Fatalf("failed to merge config \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
 	}
-
-	return nil
-}
-
-func (f *RawConfig) read() *ConfigError {
-	f.Config.SetConfigFile(f.Path)
-
-	err := f.Config.MergeInConfig()
-	if err != nil {
-		return &ConfigError{
-			Err:     err,
-			Message: "failed to merge config",
-		}
+	if err := cfg.Config.ReadInConfig(); err != nil {
+		cfg.Logger.Fatalf("failed to read config \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
 	}
-
-	if err := f.Config.ReadInConfig(); err != nil {
-		return &ConfigError{
-			Err:     err,
-			Message: "failed to read config",
-		}
-	}
-
-	return nil
 }

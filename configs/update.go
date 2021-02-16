@@ -6,8 +6,8 @@ func write() {
 
 }
 
-func (f *RawConfig) update() {
-	if !f.Parsed {
+func (cfg *RawConfig) update() {
+	if !cfg.Parsed {
 		panic(fmt.Errorf("can't update unparsed file"))
 	}
 	//f.Parse()

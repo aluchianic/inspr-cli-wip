@@ -13,7 +13,11 @@ Application [   leaf component    ] - leaves inside Workspace
  - [x] Could be added more leaf-components to workspace 
 
 
-To initialize your workspace you need to Load() and Parse() it:
+First of all you need to `Load()` your workspace, this will locate all files that are included in workspace based on its' `Root` (that can be changed on start).
+On Load `configs` package will initialize default values, if no Root were set - assuming current working directory. During `Load()` package will only locate files,
+and does not parse them. To parse files you need to call `Parse()` method, that will take all configs that are included in `workspace` and
+unmarshal & parse them. Only after `Parse()` call you can retrieve data from configs.
+ 
 
 Example of using multiple workspaces:
 ```go

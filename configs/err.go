@@ -1,9 +1,7 @@
 package configs
 
 import (
-	"fmt"
 	"github.com/spf13/viper"
-	"os"
 )
 
 type ConfigError struct {
@@ -29,12 +27,5 @@ func ErrNotFound(definition string, path string) *ConfigError {
 	return &ConfigError{
 		Err:     viper.ConfigFileNotFoundError{},
 		Message: "`" + definition + "` file not found in: " + path,
-	}
-}
-
-func ShowAndExistIfErrorExists(e *ConfigError) {
-	if e != nil {
-		fmt.Fprintf(os.Stderr, "error: %s\n", e.Message)
-		os.Exit(1)
 	}
 }
