@@ -26,8 +26,11 @@ var deployCommand = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, apps []string) {
 		w := configs.WorkspaceFiles{}
-		configs.ShowAndExistIfErrorExists(w.Load())
-		configs.ShowAndExistIfErrorExists(w.Parse())
+		err := w.Load()
+		if err != nil {
+			w.Logger.Fatalf(err.Message)
+		}
+		w.Parse()
 
 		fmt.Printf("Workspace-1 config: \n\t%v\n", w)
 	},

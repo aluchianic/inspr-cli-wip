@@ -1,7 +1,6 @@
 package configs
 
 import (
-	"go.uber.org/zap"
 	"inspr-cli/logging"
 	"os"
 	"path"
@@ -9,7 +8,7 @@ import (
 )
 
 // Creates config files and folders
-func (w *WorkspaceFiles) Create(name string, definition string) *ConfigError {
+func (w *WorkspaceFiles) Create(name string, definition string) {
 	if logger == nil {
 		logger = logging.Logger()
 	}
@@ -25,38 +24,36 @@ func (w *WorkspaceFiles) Create(name string, definition string) *ConfigError {
 	} else {
 		w.addApplication(rawConfig)
 	}
-
-	return rawConfig.create()
+	rawConfig.create()
 }
 
 // Creates new config file and directories based on its' Path
-func (f *RawConfig) create() *ConfigError {
-	if err := createDirs(f.Path); err != nil {
-		f.Logger.Fatal("failed to create directories", zap.String("path", f.Path), zap.String("type", f.Definition))
+func (cfg *RawConfig) create() {
+	if err := createDirs(cfg.Path); err != nil {
+		cfg.Logger.Fatalf("failed to create directories \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
 	}
 
-	err := f.Config.MergeInConfig()
-	if err = f.Config.SafeWriteConfigAs(f.Path); err != nil {
-		f.Logger.Fatal("failed to create new config", zap.String("path", f.Path), zap.String("type", f.Definition))
+	err := cfg.Config.MergeInConfig()
+	if err = cfg.Config.SafeWriteConfigAs(cfg.Path); err != nil {
+		cfg.Logger.Fatalf("failed to create new config \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
 	}
 
-	f.Logger.Info("Created new config", zap.String("path", f.Path), zap.String("type", f.Definition))
-
-	return nil
+	cfg.Logger.Debugf("Created new config \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
 }
 
 // Sets default values for Configs
-func (f *RawConfig) setConfigDefaults() {
-	f.Logger.Info("Setting config defaults", zap.String("type", f.Definition))
-	switch f.Definition {
+func (cfg *RawConfig) setConfigDefaults() {
+	cfg.Logger.Debugf("Setting config defaults \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
+
+	switch cfg.Definition {
 	case workspace:
-		f.Config.SetDefault("AppsDir", "apps")
-		f.Config.SetDefault("Description", "Your description goes here")
-		f.Config.SetDefault("Applications", []AppName{})
+		cfg.Config.SetDefault("AppsDir", "apps")
+		cfg.Config.SetDefault("Description", "Your description goes here")
+		cfg.Config.SetDefault("Applications", []AppName{})
 	case application:
-		f.Config.SetDefault("Depends", []string{})
-		f.Config.SetDefault("Description", "Add your Application description")
-		f.Config.SetDefault("Channels", &ChannelYaml{})
+		cfg.Config.SetDefault("Depends", []string{})
+		cfg.Config.SetDefault("Description", "Add your Application description")
+		cfg.Config.SetDefault("Channels", &ChannelYaml{})
 	}
 }
 

@@ -17,11 +17,11 @@ type ApplicationsFiles map[AppName]RawConfig
 // Raw config definition files
 type RawConfig struct {
 	Path       string
-	Content    []byte
+	Content    []byte // to used since configs are stored in memory (Viper)
 	Parsed     bool
 	Definition string
 	Config     *viper.Viper
-	Logger     *zap.Logger
+	Logger     *zap.SugaredLogger
 }
 
 /////////// CONSTANTS //////////////////

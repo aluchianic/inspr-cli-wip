@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-var logger *zap.Logger
+var logger *zap.SugaredLogger
 
 // Loads workspace and all application configs inside `WorkspaceConfig.AppsDir` and 2 level down
 func (w *WorkspaceFiles) Load() *ConfigError {
@@ -56,7 +56,7 @@ func (w *WorkspaceFiles) search(name string) *RawConfig {
 // Return `appsDir` value from config
 func (w *WorkspaceFiles) getAppsDir() string {
 	if !w.Parsed {
-		w.Logger.Fatal("can't retrieve values before parsing, use Parse() method first")
+		w.Logger.Fatalf("can't retrieve values before parsing, use Parse() method first. \t\"path\": \"%s\", \"parsed\": \"%b\" type: \"%s\"", w.Path, w.Parsed, w.Definition)
 	}
 	return w.Config.GetString("AppsDir")
 }
@@ -71,30 +71,29 @@ func (w *WorkspaceFiles) init() {
 }
 
 // Validate and initialize RawConfig struct
-func (f *RawConfig) init(definition string) {
+func (cfg *RawConfig) init(definition string) {
 	// lazy load logger
 	if logger == nil {
 		logger = logging.Logger()
-		logger.Info("lazy load logger")
 	}
-	f.Logger = logger
-	f.Config = viper.New()
+	cfg.Logger = logger
+	cfg.Config = viper.New()
 
 	switch definition {
 	case workspace:
-		f.Definition = definition
+		cfg.Definition = definition
 	case application:
-		f.Definition = definition
+		cfg.Definition = definition
 	default:
-		f.Logger.Fatal("Unknown definition for config", zap.String("type", definition))
+		cfg.Logger.Fatalf("Unknown definition for config \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
 	}
 }
 
 // Set RawConfig values
-func (f *RawConfig) load(configPath string) {
-	f.Path = configPath
+func (cfg *RawConfig) load(configPath string) {
+	cfg.Path = configPath
 
-	f.Logger.Info("Loaded config", zap.String("path", f.Path), zap.String("type", f.Definition))
+	cfg.Logger.Debugf("Loaded config \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
 }
 
 // Adds application to WorkspaceFiles struct
@@ -104,8 +103,8 @@ func (w *WorkspaceFiles) addApplication(f RawConfig) {
 }
 
 // Returns config name based on filename
-func (f *RawConfig) name() string {
-	return strings.Split(path.Base(f.Path), ".")[0]
+func (cfg *RawConfig) name() string {
+	return strings.Split(path.Base(cfg.Path), ".")[0]
 }
 
 // return absolute path, pwd in case if arg is empty string
