@@ -1,38 +1,50 @@
 package configs
 
 import (
-	"github.com/spf13/viper"
-	"go.uber.org/zap"
-	"inspr-cli/logging"
+	"inspr-cli/log"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 )
 
-var logger *zap.SugaredLogger
+// Creates config files and folders
+func (w *WorkspaceFiles) Create(name string, definition string) {
+	var rawConfig = RawConfig{}
+
+	rawConfig.init(definition)
+	rawConfig.setConfigDefaults()
+	rawConfig.setConfigPath(w.createPath(name, definition))
+
+	if definition == workspace {
+		w.RawConfig = rawConfig
+	} else {
+		w.addApplication(rawConfig)
+	}
+	rawConfig.create()
+}
 
 // Loads workspace and all application configs inside `WorkspaceConfig.AppsDir` and 2 level down
 func (w *WorkspaceFiles) Load() *ConfigError {
 	// validate and initialize default values for workspace
 	w.init()
 
-	// search workspace files
 	var matches []string
+	// search workspace files
 	matches, _ = filepath.Glob(path.Join(w.Root, workspaceFileName))
 	if len(matches) == 0 {
 		return ErrNotFound(workspace, w.Root)
 	}
 
 	w.RawConfig.init(workspace)
-	w.load(matches[0])
+	w.RawConfig.setConfigPath(matches[0])
 
 	// search application files
 	matches, _ = filepath.Glob(path.Join(w.Root, "**/**", applicationFileName))
 	for _, match := range matches {
 		app := RawConfig{}
 		app.init(application)
-		app.load(match)
+		app.setConfigPath(match)
 		w.addApplication(app)
 	}
 
@@ -67,33 +79,32 @@ func (w *WorkspaceFiles) init() {
 	if w.ApplicationsFiles == nil {
 		w.ApplicationsFiles = ApplicationsFiles{}
 	}
-
 }
 
 // Validate and initialize RawConfig struct
 func (cfg *RawConfig) init(definition string) {
-	// lazy load logger
-	if logger == nil {
-		logger = logging.Logger()
-	}
-	cfg.Logger = logger
-	cfg.Config = viper.New()
+	cfg.defineType(definition)
 
+	cfg.Logger = log.Logger
+	cfg.Config = NewConfig()
+	cfg.Logger.Debugf("init raw config \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
+}
+
+func (cfg *RawConfig) defineType(definition string) {
 	switch definition {
 	case workspace:
-		cfg.Definition = definition
 	case application:
-		cfg.Definition = definition
 	default:
 		cfg.Logger.Fatalf("Unknown definition for config \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
 	}
+	cfg.Definition = definition
 }
 
 // Set RawConfig values
-func (cfg *RawConfig) load(configPath string) {
+func (cfg *RawConfig) setConfigPath(configPath string) {
 	cfg.Path = configPath
 
-	cfg.Logger.Debugf("Loaded config \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
+	cfg.Logger.Debugf("set config path \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
 }
 
 // Adds application to WorkspaceFiles struct
@@ -121,4 +132,18 @@ func toAbsolute(p string) (abs string) {
 	}
 
 	return res
+}
+
+// Creates new path to file
+func (w *WorkspaceFiles) createPath(name string, definition string) string {
+	var filename = name + "." + definition + ".yaml"
+
+	switch definition {
+	case workspace:
+		return path.Join(w.Root, filename)
+	case application:
+		return path.Join(w.Root, w.getAppsDir(), name, filename)
+	default:
+		return ""
+	}
 }

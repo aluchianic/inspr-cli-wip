@@ -1,38 +1,34 @@
 package configs
 
 import (
-	"inspr-cli/logging"
+	"github.com/spf13/viper"
 	"os"
-	"path"
 	"path/filepath"
 )
 
-// Creates config files and folders
-func (w *WorkspaceFiles) Create(name string, definition string) {
-	if logger == nil {
-		logger = logging.Logger()
-	}
+// Returns new Viper instance
+func NewConfig() *viper.Viper {
+	return viper.New()
+}
 
-	var rawConfig = RawConfig{}
-
-	rawConfig.init(definition)
-	rawConfig.setConfigDefaults()
-	rawConfig.load(w.createPath(name, definition))
-
-	if definition == workspace {
-		w.RawConfig = rawConfig
-	} else {
-		w.addApplication(rawConfig)
-	}
-	rawConfig.create()
+// TODO: implement
+func (cfg *RawConfig) exists() bool {
+	//err := cfg.Config.ReadInConfig()
+	//_, ok := err.(viper.ConfigFileAlreadyExistsError)
+	//return ok
+	return false
 }
 
 // Creates new config file and directories based on its' Path
 func (cfg *RawConfig) create() {
+	if cfg.exists() {
+		cfg.Logger.Fatalf("config already exists \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
+	}
+
 	if err := createDirs(cfg.Path); err != nil {
 		cfg.Logger.Fatalf("failed to create directories \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
 	}
-
+	// TODO: add alreadyExist Error
 	err := cfg.Config.MergeInConfig()
 	if err = cfg.Config.SafeWriteConfigAs(cfg.Path); err != nil {
 		cfg.Logger.Fatalf("failed to create new config \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
@@ -61,18 +57,4 @@ func (cfg *RawConfig) setConfigDefaults() {
 func createDirs(path string) error {
 	dir, _ := filepath.Split(path)
 	return os.MkdirAll(dir, os.ModePerm)
-}
-
-// Creates new path to file
-func (w *WorkspaceFiles) createPath(name string, definition string) string {
-	var filename = name + "." + definition + ".yaml"
-
-	switch definition {
-	case workspace:
-		return path.Join(w.Root, filename)
-	case application:
-		return path.Join(w.Root, w.getAppsDir(), name, filename)
-	default:
-		return ""
-	}
 }

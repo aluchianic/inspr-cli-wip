@@ -7,6 +7,8 @@ import (
 type ConfigError struct {
 	Err     error
 	Message string
+	Type    string
+	Reason  string
 }
 
 func (e *ConfigError) Error() string {

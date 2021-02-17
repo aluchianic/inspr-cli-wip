@@ -1,6 +1,6 @@
 package configs
 
-// parses config file according to it 'Definition'
+// Parses all WorkspaceFiles
 func (w *WorkspaceFiles) Parse() {
 	// parse workspace
 	w.RawConfig.parse(WorkspaceYaml{})
@@ -11,6 +11,7 @@ func (w *WorkspaceFiles) Parse() {
 	}
 }
 
+// Parses config file according to interface
 func (cfg *RawConfig) parse(i interface{}) {
 	cfg.unmarshal(&i)
 	cfg.read()
@@ -19,12 +20,14 @@ func (cfg *RawConfig) parse(i interface{}) {
 	cfg.Logger.Debugf("Parsed config \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
 }
 
+// Unmarshal config
 func (cfg *RawConfig) unmarshal(i interface{}) {
 	if err := cfg.Config.Unmarshal(&i); err != nil {
 		cfg.Logger.Fatalf("failed to unmarshal \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
 	}
 }
 
+// Read config in memory
 func (cfg *RawConfig) read() {
 	cfg.Config.SetConfigFile(cfg.Path)
 
