@@ -1,7 +1,7 @@
-package configs
+package config
 
 import (
-	"inspr-cli/log"
+	"inspr-cli/pkg/log"
 	"os"
 	"path"
 	"path/filepath"
@@ -24,8 +24,8 @@ func (w *WorkspaceFiles) Create(name string, definition string) {
 	rawConfig.create()
 }
 
-// Loads workspace and all application configs inside `WorkspaceConfig.AppsDir` and 2 level down
-func (w *WorkspaceFiles) Load() *ConfigError {
+// Loads workspace and all application config inside `WorkspaceConfig.AppsDir` and 2 level down
+func (w *WorkspaceFiles) Load() *Error {
 	// validate and initialize default values for workspace
 	w.init()
 

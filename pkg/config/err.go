@@ -1,32 +1,32 @@
-package configs
+package config
 
 import (
 	"github.com/spf13/viper"
 )
 
-type ConfigError struct {
+type Error struct {
 	Err     error
 	Message string
 	Type    string
 	Reason  string
 }
 
-func (e *ConfigError) Error() string {
+func (e *Error) Error() string {
 	return e.Err.Error()
 }
 
-func (e *ConfigError) AlreadyExists() bool {
+func (e *Error) AlreadyExists() bool {
 	_, ok := e.Err.(viper.ConfigFileAlreadyExistsError)
 	return ok
 }
 
-func (e *ConfigError) NotFound() bool {
+func (e *Error) NotFound() bool {
 	_, ok := e.Err.(viper.ConfigFileNotFoundError)
 	return ok
 }
 
-func ErrNotFound(definition string, path string) *ConfigError {
-	return &ConfigError{
+func ErrNotFound(definition string, path string) *Error {
+	return &Error{
 		Err:     viper.ConfigFileNotFoundError{},
 		Message: "`" + definition + "` file not found in: " + path,
 	}

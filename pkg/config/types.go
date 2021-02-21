@@ -1,11 +1,11 @@
-package configs
+package config
 
 import (
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
-// WorkspaceFiles contains raw configs definition files for Workspace and it Applications
+// WorkspaceFiles contains raw config definition files for Workspace and it Applications
 type WorkspaceFiles struct {
 	RawConfig
 	ApplicationsFiles
@@ -17,7 +17,7 @@ type ApplicationsFiles map[AppName]RawConfig
 // Raw config definition files
 type RawConfig struct {
 	Path       string
-	Content    []byte // to used since configs are stored in memory (Viper)
+	Content    []byte // TODO: not used : since config are stored in memory (Viper)
 	Parsed     bool
 	Definition string
 	Config     *viper.Viper
@@ -33,7 +33,7 @@ const (
 )
 
 /////////// Configs ////////////////////
-// ??: MainCliYaml is yaml for main cli settings $HOME/.inspr/inspr.config.yaml
+// TODO NOT USED: MainCliYaml is yaml for main cli settings $HOME/.inspr/inspr.config.yaml
 type MainCliYaml struct {
 	Version string `yaml:"version"`
 	Account string `yaml:"account"`

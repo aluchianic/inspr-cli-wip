@@ -1,4 +1,4 @@
-package configs
+package config
 
 // Parses all WorkspaceFiles
 func (w *WorkspaceFiles) Parse() {

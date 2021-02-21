@@ -1,3 +1,12 @@
+TODO:
+
+- [ ] rename to just `config`
+- [ ] move out of WorkspaceFiles on load, to just Load and get struct to work with
+- [ ] create handler for `config`
+- [ ] create `configflags.go` that handles config related flags
+
+
+
 Used composite pattern:
 https://refactoring.guru/design-patterns/composite
 
@@ -20,7 +29,7 @@ Example of using multiple workspaces:
     
     import 	(
         "fmt"
-        "inspr-cli/configs"
+        "inspr-cli/pkg/config"
     )
 
     func main() {
