@@ -10,8 +10,11 @@ TODO:
 Used composite pattern:
 https://refactoring.guru/design-patterns/composite
 
-Workspace   == [ component container ] --> keeps inside Applications
-Application == [   leaf component    ] --> ...
+
+Workspace   [ component container ] - keeps inside Applications 
+
+Application [   leaf component    ] - leaves inside Workspace
+
 
  - [x] Every config (workspace or application) is RawConfig and can be manipulated trough corresponding (c *RawFile) methods
  - [x] Workspace composes inside it Applications
