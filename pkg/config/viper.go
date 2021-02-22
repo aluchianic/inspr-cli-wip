@@ -1,8 +1,9 @@
 package config
 
 import (
-	"github.com/spf13/viper"
 	"inspr-cli/pkg/util"
+
+	"github.com/spf13/viper"
 	"os"
 	"path/filepath"
 )

@@ -1,9 +1,10 @@
 package cluster
 
 import (
+	"inspr-cli/pkg/command"
+
 	"fmt"
 	"github.com/spf13/cobra"
-	"inspr-cli/pkg/command"
 )
 
 var (

@@ -1,8 +1,9 @@
 package auth
 
 import (
-	"github.com/spf13/cobra"
 	"inspr-cli/pkg/command"
+
+	"github.com/spf13/cobra"
 )
 
 // authCommand represents the `auth register` command

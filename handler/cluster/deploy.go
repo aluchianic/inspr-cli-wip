@@ -1,10 +1,11 @@
 package cluster
 
 import (
-	"github.com/spf13/cobra"
 	"inspr-cli/pkg/command"
 	"inspr-cli/pkg/config"
 	"inspr-cli/pkg/util"
+
+	"github.com/spf13/cobra"
 )
 
 // deployCommand represents the `cluster deploy` command

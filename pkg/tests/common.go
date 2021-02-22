@@ -1,15 +1,15 @@
 package tests
 
 import (
+	"inspr-cli/cmd"
+	"inspr-cli/pkg/util"
+
 	"bytes"
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"strings"
 	"testing"
-
-	"inspr-cli/cmd"
-	"inspr-cli/pkg/util"
 )
 
 // Returns a buffer for stdout, stderr, and a function.

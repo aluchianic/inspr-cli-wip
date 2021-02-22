@@ -1,9 +1,10 @@
 package config
 
 import (
+	test "inspr-cli/pkg/tests"
+
 	"fmt"
 	"github.com/stretchr/testify/assert"
-	test "inspr-cli/pkg/tests"
 	"testing"
 )
 

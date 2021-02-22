@@ -1,11 +1,12 @@
 package cluster
 
 import (
-	"fmt"
-	"github.com/spf13/cobra"
 	"inspr-cli/cmd"
 	"inspr-cli/pkg/command"
 	"inspr-cli/pkg/config"
+
+	"fmt"
+	"github.com/spf13/cobra"
 )
 
 // clusterCmd represents the cluster command

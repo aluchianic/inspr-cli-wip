@@ -1,10 +1,11 @@
 package example
 
 import (
-	"fmt"
-	"github.com/spf13/cobra"
 	"inspr-cli/cmd"
 	"inspr-cli/pkg/command"
+
+	"fmt"
+	"github.com/spf13/cobra"
 )
 
 // exampleCmd represents the example command
