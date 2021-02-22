@@ -37,7 +37,7 @@ func InsprTestSetupCli(args string) (*bytes.Buffer, *bytes.Buffer, Restorer) {
 	}
 }
 
-// runPx runs a command saved in os.Args and returns the error if any
+// runInspr runs a command saved in os.Args and returns the error if any
 func RunInspr() error {
 	return cmd.Main()
 }
