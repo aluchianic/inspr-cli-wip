@@ -3,7 +3,8 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"inspr-cli/pkg/command"
-	"os"
+	"inspr-cli/pkg/config"
+	"inspr-cli/pkg/util"
 )
 
 func init() {
@@ -12,15 +13,16 @@ func init() {
 
 // initConfig reads in config file
 func initConfig() {
-	// TODO -- change to use CM()
+	// try to locate workspace
+	cm := config.CM()
+	_ = cm.Load(cm.Flags.WorkspaceDir)
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := Main(); err != nil {
-		//TODO: show error
-		os.Exit(1)
+		util.Errorf(err.Error())
 	}
 }
 

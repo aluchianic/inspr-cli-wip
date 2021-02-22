@@ -2,30 +2,26 @@ package config
 
 import (
 	"github.com/spf13/viper"
-	"go.uber.org/zap"
 )
 
-// WorkspaceFiles contains raw config definition files for Workspace and it Applications
-type WorkspaceFiles struct {
-	RawConfig
-	ApplicationsFiles
-	Root string
+// Workspace contains raw config definition files for Workspace and it Applications
+type Workspace struct {
+	Workspace    RawConfig
+	Applications map[string]RawConfig
+	Root         string
 }
-
-type ApplicationsFiles map[AppName]RawConfig
 
 // Raw config definition files
 type RawConfig struct {
 	Path       string
-	Content    []byte // TODO: not used : since config are stored in memory (Viper)
 	Parsed     bool
 	Definition string
 	Config     *viper.Viper
-	Logger     *zap.SugaredLogger
 }
 
 /////////// CONSTANTS //////////////////
 const (
+	homedirFolder       = ".inspr"
 	workspace           = "workspace"
 	application         = "application"
 	workspaceFileName   = "*." + workspace + ".yaml"
@@ -42,14 +38,14 @@ type MainCliYaml struct {
 
 // WorkspaceYaml is a yaml for a channel
 type WorkspaceYaml struct {
-	Description  string    `yaml:"description"`
-	AppsDir      string    `yaml:"appsdir"`
-	Applications []AppName `yaml:"applications"`
+	Description  string   `yaml:"description"`
+	AppsDir      string   `yaml:"appsdir"`
+	Applications []string `yaml:"applications"`
 }
 
 // ApplicationYaml is a yaml for a channel
 type ApplicationYaml struct {
-	Name         AppName  `yaml:"name"`
+	Name         string   `yaml:"name"`
 	Id           string   `yaml:"id"`
 	Dependencies []string `yaml:"dependencies"`
 	ChannelYaml  `yaml:"channels"`
@@ -62,15 +58,9 @@ type ChannelYaml struct {
 	Channels  []Channel `yaml:"channels"`
 }
 
-// Application name - unique for workspace
-type AppName string
-
 // Channel is the definition for a channel
 type Channel struct {
 	Name       string `yaml:"name"`
 	Avropath   string `yaml:"avropath"`
 	Partitions int32  `yaml:"partitions"`
 }
-
-// Workspace flag to change path to config file
-type WorkspaceFlag = string

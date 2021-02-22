@@ -1,11 +1,10 @@
 package config
 
 import (
-	"fmt"
 	"github.com/spf13/cobra"
 	"inspr-cli/pkg/command"
 	"inspr-cli/pkg/config"
-	"os"
+	"inspr-cli/pkg/util"
 )
 
 // appCommand represents the `config app` command
@@ -17,23 +16,18 @@ var _ = command.RegisterCommandVar(func() {
 		Args:  cobra.MinimumNArgs(1),
 		Short: "Initialize fresh application configs",
 		Run: func(_ *cobra.Command, appNames []string) {
-			workspace := config.WorkspaceFiles{
-				Root: workspacePath,
-			}
+			cm := config.CM()
 
-			err := workspace.Load()
+			err := cm.Load(cm.Flags.WorkspaceDir)
 			if err != nil {
-				// TODO: !!
-				fmt.Errorf("err : %v", err)
-				os.Exit(1)
+				util.Errorf(err.Message)
 			}
 
 			// Parse workspace allowing read content of WorkspaceConfig to create Application
-			workspace.Parse()
-
+			cm.Config.Parse()
 			for _, app := range appNames {
-				workspace.Create(app, "application")
-				workspace.Logger.Infof("Created new application in workspace: %s", workspace.Path)
+				cm.Create(app, "application")
+				util.Infof("Created new application in workspace: %s", cm.Config.Workspace.Path)
 			}
 		},
 	}

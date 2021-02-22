@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 	"inspr-cli/pkg/command"
 	"inspr-cli/pkg/config"
+	"inspr-cli/pkg/util"
 )
 
 // deployCommand represents the `cluster deploy` command
@@ -15,14 +16,12 @@ var _ = command.RegisterCommandVar(func() {
 		Short: "Deploy application on cluster",
 		Args:  cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, apps []string) {
-			// get workspace
-			w := config.WorkspaceFiles{}
-			err := w.Load()
+			cm := config.CM()
+			err := cm.Load(cm.Flags.WorkspaceDir)
 			if err != nil {
-				w.Logger.Fatalf(err.Message)
+				util.Errorf(err.Message)
 			}
-			w.Parse()
-
+			cm.Config.Parse()
 		},
 	}
 })

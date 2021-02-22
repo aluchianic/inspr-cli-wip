@@ -5,10 +5,13 @@ import (
 	"github.com/spf13/cobra"
 	"inspr-cli/cmd"
 	"inspr-cli/pkg/command"
+	"inspr-cli/pkg/config"
 )
 
 // clusterCmd represents the cluster command
-var clusterCmd *cobra.Command
+var (
+	clusterCmd *cobra.Command
+)
 
 var _ = command.RegisterCommandVar(func() {
 	clusterCmd = &cobra.Command{
@@ -23,6 +26,7 @@ var _ = command.RegisterCommandVar(func() {
 
 var _ = command.RegisterCommandInit(func() {
 	cmd.RootCommandAddCommand(clusterCmd)
+	config.CM().Flags.AddFlags(clusterCmd.PersistentFlags())
 })
 
 func ClusterAddCommand(cmd *cobra.Command) {

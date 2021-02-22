@@ -5,13 +5,12 @@ import (
 	"github.com/spf13/cobra"
 	"inspr-cli/cmd"
 	"inspr-cli/pkg/command"
+	"inspr-cli/pkg/config"
 )
 
 var (
 	// configCommand represents the `config` command
 	configCommand *cobra.Command
-	appNames      []string
-	workspacePath string
 )
 
 var _ = command.RegisterCommandVar(func() {
@@ -27,9 +26,7 @@ var _ = command.RegisterCommandVar(func() {
 
 var _ = command.RegisterCommandInit(func() {
 	cmd.RootCommandAddCommand(configCommand)
-
-	appCommand.Flags().StringSliceVarP(&appNames, "appNames", "a", []string{}, "Init new Applications (should have also -w where to create)")
-	appCommand.Flags().StringVarP(&workspacePath, "path", "p", "", "Path to workspace to be used, by default searching in current working directory")
+	config.CM().Flags.AddFlags(configCommand.PersistentFlags())
 })
 
 func ConfigCommandAddCommand(c *cobra.Command) {

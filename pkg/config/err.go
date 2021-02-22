@@ -28,6 +28,6 @@ func (e *Error) NotFound() bool {
 func ErrNotFound(definition string, path string) *Error {
 	return &Error{
 		Err:     viper.ConfigFileNotFoundError{},
-		Message: "`" + definition + "` file not found in: " + path,
+		Message: "`" + definition + "` file not found in: " + path + "\nuse inspr init `" + definition + "`-h\n",
 	}
 }

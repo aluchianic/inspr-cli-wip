@@ -1,63 +1,100 @@
 package config
 
 import (
-	"inspr-cli/pkg/log"
+	"inspr-cli/pkg/util"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 )
 
-// Creates config files and folders
-func (w *WorkspaceFiles) Create(name string, definition string) {
-	var rawConfig = RawConfig{}
+type Manager struct {
+	Config *Workspace
+	Flags  *ConfigFlags
+}
 
+var (
+	gcm *Manager
+)
+
+// CM returns the instance to the config manager
+func CM() *Manager {
+	if gcm == nil {
+		gcm = newConfigManager()
+	}
+
+	return gcm
+}
+
+func newWorkspace() *Workspace {
+	return &Workspace{
+		Workspace:    RawConfig{},
+		Applications: make(map[string]RawConfig),
+		Root:         "",
+	}
+}
+
+func newConfigManager() *Manager {
+	configManager := &Manager{
+		Config: newWorkspace(),
+		Flags:  newWorkspaceFlags(),
+	}
+
+	return configManager
+}
+
+// Creates config files and folders
+func (gcm *Manager) Create(name string, definition string) {
+	cfgPath := gcm.Config.createPath(name, definition)
+
+	rawConfig := RawConfig{}
 	rawConfig.init(definition)
 	rawConfig.setConfigDefaults()
-	rawConfig.setConfigPath(w.createPath(name, definition))
+	rawConfig.setConfigPath(cfgPath)
 
-	if definition == workspace {
-		w.RawConfig = rawConfig
-	} else {
-		w.addApplication(rawConfig)
+	switch definition {
+	case workspace:
+		gcm.Config.Workspace = rawConfig
+	case application:
+		gcm.Config.addApplication(rawConfig)
 	}
+
 	rawConfig.create()
 }
 
 // Loads workspace and all application config inside `WorkspaceConfig.AppsDir` and 2 level down
-func (w *WorkspaceFiles) Load() *Error {
-	// validate and initialize default values for workspace
-	w.init()
+func (gcm *Manager) Load(root string) *Error {
+	cfg := gcm.Config
+	cfg.Root = toAbsolute(root)
 
 	var matches []string
 	// search workspace files
-	matches, _ = filepath.Glob(path.Join(w.Root, workspaceFileName))
+	matches, _ = filepath.Glob(path.Join(cfg.Root, workspaceFileName))
 	if len(matches) == 0 {
-		return ErrNotFound(workspace, w.Root)
+		return ErrNotFound(workspace, cfg.Root)
 	}
 
-	w.RawConfig.init(workspace)
-	w.RawConfig.setConfigPath(matches[0])
+	cfg.Workspace.init(workspace)
+	cfg.Workspace.setConfigPath(matches[0])
 
 	// search application files
-	matches, _ = filepath.Glob(path.Join(w.Root, "**/**", applicationFileName))
+	matches, _ = filepath.Glob(path.Join(cfg.Root, "**/**", applicationFileName))
 	for _, match := range matches {
 		app := RawConfig{}
 		app.init(application)
 		app.setConfigPath(match)
-		w.addApplication(app)
+
+		cfg.addApplication(app)
 	}
 
 	return nil
 }
 
 // Returns Application config in case if exists in Workspace, empty string otherwise
-func (w *WorkspaceFiles) search(name string) *RawConfig {
-	n := AppName(name)
-
-	for appName, _ := range w.ApplicationsFiles {
-		if appName == n {
-			rawCfg := w.ApplicationsFiles[n]
+func (w *Workspace) search(name string) *RawConfig {
+	for appName, _ := range w.Applications {
+		if appName == name {
+			rawCfg := w.Applications[appName]
 			return &rawCfg
 		}
 	}
@@ -66,28 +103,19 @@ func (w *WorkspaceFiles) search(name string) *RawConfig {
 }
 
 // Return `appsDir` value from config
-func (w *WorkspaceFiles) getAppsDir() string {
-	if !w.Parsed {
-		w.Logger.Fatalf("can't retrieve values before parsing, use Parse() method first. \t\"path\": \"%s\", \"parsed\": \"%b\" type: \"%s\"", w.Path, w.Parsed, w.Definition)
+func (w *Workspace) getAppsDir() string {
+	if !w.Workspace.Parsed {
+		util.Errorf("can't retrieve values before parsing, use Parse() method first. \t\"path\": \"%s\", \"parsed\": \"%b\" type: \"%s\"", w.Workspace.Path, w.Workspace.Parsed, w.Workspace.Definition)
 	}
-	return w.Config.GetString("AppsDir")
-}
-
-// Validate and initialize WorkspaceFiles struct
-func (w *WorkspaceFiles) init() {
-	w.Root = toAbsolute(w.Root)
-	if w.ApplicationsFiles == nil {
-		w.ApplicationsFiles = ApplicationsFiles{}
-	}
+	return w.Workspace.Config.GetString("AppsDir")
 }
 
 // Validate and initialize RawConfig struct
 func (cfg *RawConfig) init(definition string) {
 	cfg.defineType(definition)
 
-	cfg.Logger = log.Logger
 	cfg.Config = NewConfig()
-	cfg.Logger.Debugf("init raw config \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
+	util.Debugf("init raw config \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
 }
 
 func (cfg *RawConfig) defineType(definition string) {
@@ -95,7 +123,7 @@ func (cfg *RawConfig) defineType(definition string) {
 	case workspace:
 	case application:
 	default:
-		cfg.Logger.Fatalf("Unknown definition for config \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
+		util.Errorf("Unknown definition for config \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
 	}
 	cfg.Definition = definition
 }
@@ -104,13 +132,12 @@ func (cfg *RawConfig) defineType(definition string) {
 func (cfg *RawConfig) setConfigPath(configPath string) {
 	cfg.Path = configPath
 
-	cfg.Logger.Debugf("set config path \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
+	util.Debugf("set config path \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
 }
 
-// Adds application to WorkspaceFiles struct
-func (w *WorkspaceFiles) addApplication(f RawConfig) {
-	name := AppName(f.name())
-	w.ApplicationsFiles[name] = f
+// Adds application to Workspace struct
+func (w *Workspace) addApplication(cfg RawConfig) {
+	w.Applications[cfg.name()] = cfg
 }
 
 // Returns config name based on filename
@@ -135,7 +162,7 @@ func toAbsolute(p string) (abs string) {
 }
 
 // Creates new path to file
-func (w *WorkspaceFiles) createPath(name string, definition string) string {
+func (w *Workspace) createPath(name string, definition string) string {
 	var filename = name + "." + definition + ".yaml"
 
 	switch definition {

@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 	"inspr-cli/pkg/command"
 	"inspr-cli/pkg/config"
+	"inspr-cli/pkg/util"
 )
 
 // workspaceCommand represents the `config workspace` command
@@ -15,13 +16,11 @@ var _ = command.RegisterCommandVar(func() {
 		Args:  cobra.ExactArgs(1),
 		Short: "Initialize fresh Inspr workspace config",
 		Run: func(_ *cobra.Command, args []string) {
-			workspace := config.WorkspaceFiles{
-				Root: workspacePath,
-			}
-
-			if err := workspace.Load(); err != nil && err.NotFound() {
-				workspace.Create(args[0], "workspace")
-				workspace.Logger.Infof("Created new workspace in: %s", workspace.Path)
+			cm := config.CM()
+			err := cm.Load(cm.Flags.WorkspaceDir)
+			if err != nil && err.NotFound() {
+				cm.Create(args[0], "workspace")
+				util.Infof("Created new workspace in: %s", cm.Config.Workspace.Path)
 			}
 		},
 	}
