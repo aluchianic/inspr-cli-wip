@@ -6,7 +6,7 @@ import (
 
 // Workspace contains raw config definition files for Workspace and it Applications
 type Workspace struct {
-	Workspace    RawConfig
+	RawConfig
 	Applications map[string]RawConfig
 	Root         string
 }

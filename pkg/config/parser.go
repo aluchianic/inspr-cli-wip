@@ -7,7 +7,7 @@ import (
 // Parses all Workspace
 func (w *Workspace) Parse() {
 	// parse workspace
-	w.Workspace.parse(WorkspaceYaml{})
+	w.parse(WorkspaceYaml{})
 
 	// parse application
 	for _, fileRaw := range w.Applications {

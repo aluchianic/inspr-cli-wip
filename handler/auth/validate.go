@@ -10,7 +10,7 @@ var validateCommand *cobra.Command
 
 var _ = command.RegisterCommandVar(func() {
 	validateCommand = &cobra.Command{
-		Use:   "validateCommand",
+		Use:   "validate",
 		Short: "Validate your Inspr authorization",
 		Run:   func(cmd *cobra.Command, args []string) {},
 	}

@@ -27,7 +27,7 @@ var _ = command.RegisterCommandVar(func() {
 			cm.Config.Parse()
 			for _, app := range appNames {
 				cm.Create(app, "application")
-				util.Infof("Created new application in workspace: %s", cm.Config.Workspace.Path)
+				util.Infof("Created new application in workspace: %s", cm.Config.Path)
 			}
 		},
 	}

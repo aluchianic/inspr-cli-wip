@@ -90,7 +90,34 @@ Use "inspr hub [command] --help" for more information about a command.
 ```
 
 ### Usage :
+```
+    inspr [GROUP(s)] [COMMAND] [OPTIONS]
+```
+#### Groups
 
+Some components may have sub-components or groups as a way of grouping
+commands for a certain task. Groups can have groups, commands/verbs, or options.
+
+##### Examples
+
+```
+# cluster is the group
+inspr cluster list
+```
+
+#### Commands
+
+Commands or verbs take options as flags and they are the actions on an object.
+
+##### Examples
+
+```
+# register is the command
+inspr auth register
+
+# create is the command
+inspr config create --type=... --name=...
+```
 ### Adding a command
 
 * Create a new directory under `handler/`

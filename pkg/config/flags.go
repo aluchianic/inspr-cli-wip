@@ -19,7 +19,7 @@ func newWorkspaceFlags() *ConfigFlags {
 	// read it from the HOME directory
 
 	// Check env
-	configDir := os.Getenv("INSPRHOMEDIR")
+	configDir := os.Getenv("INSPR_HOMEDIR")
 	if len(configDir) == 0 {
 		// Find home directory.
 		home, err := homedir.Dir()
@@ -35,6 +35,6 @@ func newWorkspaceFlags() *ConfigFlags {
 }
 
 func (c *ConfigFlags) AddFlags(flags *pflag.FlagSet) {
-	flags.StringVar(&c.WorkspaceDir, "workspace", "", "Inspr workspace config path")
-	flags.StringVar(&c.ApplicationsDir, "apps", "", "Directory to search applications in")
+	flags.StringVarP(&c.WorkspaceDir, "workspace", "w", "", "Inspr workspace config path")
+	flags.StringVarP(&c.ApplicationsDir, "apps", "a", "", "Directory to search applications in")
 }

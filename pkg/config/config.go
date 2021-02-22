@@ -28,7 +28,7 @@ func CM() *Manager {
 
 func newWorkspace() *Workspace {
 	return &Workspace{
-		Workspace:    RawConfig{},
+		RawConfig:    RawConfig{},
 		Applications: make(map[string]RawConfig),
 		Root:         "",
 	}
@@ -45,7 +45,8 @@ func newConfigManager() *Manager {
 
 // Creates config files and folders
 func (gcm *Manager) Create(name string, definition string) {
-	cfgPath := gcm.Config.createPath(name, definition)
+	cfg := gcm.Config
+	cfgPath := cfg.createPath(name, definition)
 
 	rawConfig := RawConfig{}
 	rawConfig.init(definition)
@@ -54,9 +55,9 @@ func (gcm *Manager) Create(name string, definition string) {
 
 	switch definition {
 	case workspace:
-		gcm.Config.Workspace = rawConfig
+		cfg.RawConfig = rawConfig
 	case application:
-		gcm.Config.addApplication(rawConfig)
+		cfg.addApplication(rawConfig)
 	}
 
 	rawConfig.create()
@@ -74,8 +75,8 @@ func (gcm *Manager) Load(root string) *Error {
 		return ErrNotFound(workspace, cfg.Root)
 	}
 
-	cfg.Workspace.init(workspace)
-	cfg.Workspace.setConfigPath(matches[0])
+	cfg.init(workspace)
+	cfg.setConfigPath(matches[0])
 
 	// search application files
 	matches, _ = filepath.Glob(path.Join(cfg.Root, "**/**", applicationFileName))
@@ -104,10 +105,10 @@ func (w *Workspace) search(name string) *RawConfig {
 
 // Return `appsDir` value from config
 func (w *Workspace) getAppsDir() string {
-	if !w.Workspace.Parsed {
-		util.Errorf("can't retrieve values before parsing, use Parse() method first. \t\"path\": \"%s\", \"parsed\": \"%b\" type: \"%s\"", w.Workspace.Path, w.Workspace.Parsed, w.Workspace.Definition)
+	if !w.Parsed {
+		util.Errorf("can't retrieve values before parsing, use Parse() method first. \t\"path\": \"%s\", \"parsed\": \"%b\" type: \"%s\"", w.Path, w.Parsed, w.Definition)
 	}
-	return w.Workspace.Config.GetString("AppsDir")
+	return w.Config.GetString("AppsDir")
 }
 
 // Validate and initialize RawConfig struct

@@ -17,10 +17,11 @@ var _ = command.RegisterCommandVar(func() {
 		Short: "Initialize fresh Inspr workspace config",
 		Run: func(_ *cobra.Command, args []string) {
 			cm := config.CM()
+
 			err := cm.Load(cm.Flags.WorkspaceDir)
 			if err != nil && err.NotFound() {
 				cm.Create(args[0], "workspace")
-				util.Infof("Created new workspace in: %s", cm.Config.Workspace.Path)
+				util.Infof("Created new workspace in: %s", cm.Config.Path)
 			}
 		},
 	}

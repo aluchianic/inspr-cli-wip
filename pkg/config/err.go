@@ -7,8 +7,6 @@ import (
 type Error struct {
 	Err     error
 	Message string
-	Type    string
-	Reason  string
 }
 
 func (e *Error) Error() string {
