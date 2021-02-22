@@ -1,8 +1,9 @@
 package cluster
 
 import (
-	"github.com/spf13/cobra"
 	"inspr-cli/pkg/command"
+
+	"github.com/spf13/cobra"
 )
 
 var (

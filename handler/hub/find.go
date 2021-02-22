@@ -1,8 +1,9 @@
 package hub
 
 import (
-	"github.com/spf13/cobra"
 	"inspr-cli/pkg/command"
+
+	"github.com/spf13/cobra"
 )
 
 // hubFindCommand represents the `hub find` command

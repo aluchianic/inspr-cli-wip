@@ -1,10 +1,11 @@
 package auth
 
 import (
-	"fmt"
-	"github.com/spf13/cobra"
 	"inspr-cli/cmd"
 	"inspr-cli/pkg/command"
+
+	"fmt"
+	"github.com/spf13/cobra"
 )
 
 // authCommand represents the `auth` command
