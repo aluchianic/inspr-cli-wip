@@ -1,29 +1,25 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/spf13/cobra"
-	"os"
+	"inspr-cli/pkg/command"
 )
 
-var (
-	// rootCmd represents the base command when called without any subcommands
-	rootCmd = &cobra.Command{
+var rootCommand *cobra.Command
+
+var _ = command.RegisterCommandVar(func() {
+	// rootCommand represents the base command when called without any subcommands
+	rootCommand = &cobra.Command{
 		Use:   "inspr",
-		Short: "A brief description of your application",
-		Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-inspr ... .`,
+		Short: "Inspr orchestrator",
 	}
-)
+})
 
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println("EXECUTE ::", err)
-		os.Exit(1)
-	}
-}
+var _ = command.RegisterCommandInit(func() {
+	// TODO: add custom usage and help
+	// TODO: add initialization to root.PersistentPreRunE (e.g. Logger)
+})
 
-func init() {
-
+func RootCommandAddCommand(c *cobra.Command) {
+	rootCommand.AddCommand(c)
 }
