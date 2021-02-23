@@ -1,4 +1,4 @@
-### Inspr commands to operate with Cluster and Local files (init Workspace, App)
+### Inspr
 ```
 Inspr orchestrator
 
