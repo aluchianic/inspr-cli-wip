@@ -14,7 +14,7 @@ var appCommand *cobra.Command
 func CreateApp(_ *cobra.Command, appNames []string) error {
 	cm := config.CM()
 
-	err := cm.Load(cm.Flags.WorkspaceDir)
+	err := cm.LoadConfigs(cm.Flags.WorkspaceDir)
 	if err != nil {
 		return err
 	}
@@ -22,7 +22,7 @@ func CreateApp(_ *cobra.Command, appNames []string) error {
 	// Parse workspace allowing read content of WorkspaceConfig to create Application
 	cm.Config.Parse()
 	for _, app := range appNames {
-		cm.Create(app, "application")
+		cm.CreateConfig(app, "application")
 		util.Infof("Created new application in workspace: %s", cm.Config.Path)
 	}
 	return nil

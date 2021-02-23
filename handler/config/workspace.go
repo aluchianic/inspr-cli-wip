@@ -11,16 +11,18 @@ import (
 // workspaceCommand represents the `config workspace` command
 var workspaceCommand *cobra.Command
 
-func CreateWorkspace(_ *cobra.Command, args []string) error {
+func CreateWorkspace(_ *cobra.Command, args []string) {
 	cm := config.CM()
+	err := cm.LoadConfigs(cm.Flags.WorkspaceDir)
 
-	err := cm.Load(cm.Flags.WorkspaceDir)
-	if err != nil && err.NotFound() {
-		cm.Create(args[0], "workspace")
-		util.Infof("Created new workspace in: %s", cm.Config.Path)
+	if err == nil {
+		util.Errorf("workspace already exists : %s", cm.Config.Path)
+	} else {
+		if err.NotFound() {
+			cm.CreateConfig(args[0], "workspace")
+			util.Infof("Created new workspace in: %s", cm.Config.Path)
+		}
 	}
-
-	return nil
 }
 
 var _ = command.RegisterCommandVar(func() {
@@ -28,7 +30,7 @@ var _ = command.RegisterCommandVar(func() {
 		Use:   "workspace [workspace name]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Initialize fresh Inspr workspace config",
-		RunE:  CreateWorkspace,
+		Run:   CreateWorkspace,
 	}
 })
 

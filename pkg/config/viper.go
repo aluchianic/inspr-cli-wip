@@ -21,14 +21,14 @@ func (cfg *RawConfig) exists(err error) bool {
 // Creates new config file and directories based on its' Path
 func (cfg *RawConfig) create() {
 	if err := createDirs(cfg.Path); err != nil {
-		util.Errorf("failed to create directories \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
+		util.Errorf("failed to create directories \"path\": %s \"type\": %s", cfg.Path, cfg.Definition)
 	}
 	err := cfg.Config.MergeInConfig()
 	if err = cfg.Config.SafeWriteConfigAs(cfg.Path); err != nil {
 		if cfg.exists(err) {
-			util.Errorf("config already exists \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
+			util.Errorf("config already exists \"path\": %s \"type\": %s", cfg.Path, cfg.Definition)
 		}
-		util.Errorf("failed to create new config \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
+		util.Errorf("failed to create new config \"path\": %s \"type\": %s", cfg.Path, cfg.Definition)
 	}
 
 	util.Debugf("Created new config \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
@@ -50,7 +50,7 @@ func (cfg *RawConfig) setConfigDefaults() {
 	}
 }
 
-// Create directories recursively
+// CreateConfig directories recursively
 func createDirs(path string) error {
 	dir, _ := filepath.Split(path)
 	return os.MkdirAll(dir, os.ModePerm)
