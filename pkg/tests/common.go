@@ -2,6 +2,7 @@ package tests
 
 import (
 	"inspr-cli/cmd"
+	_ "inspr-cli/handler"
 	"inspr-cli/pkg/util"
 
 	"bytes"

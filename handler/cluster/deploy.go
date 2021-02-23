@@ -18,7 +18,7 @@ var _ = command.RegisterCommandVar(func() {
 		Args:  cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, apps []string) {
 			cm := config.CM()
-			err := cm.Load(cm.Flags.WorkspaceDir)
+			err := cm.LoadConfigs(cm.Flags.WorkspaceDir)
 			if err != nil {
 				util.Errorf(err.Message)
 			}

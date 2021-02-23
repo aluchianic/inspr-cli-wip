@@ -15,7 +15,7 @@ func init() {
 func initConfig() {
 	// try to locate workspace
 	cm := config.CM()
-	_ = cm.Load(cm.Flags.WorkspaceDir)
+	_ = cm.LoadConfigs(cm.Flags.WorkspaceDir)
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

@@ -15,22 +15,22 @@ type Manager struct {
 }
 
 var (
-	gcm *Manager
+	cm *Manager
 )
 
 // CM returns the instance to the config manager
 func CM() *Manager {
-	if gcm == nil {
-		gcm = newConfigManager()
+	if cm == nil {
+		cm = newConfigManager()
 	}
 
-	return gcm
+	return cm
 }
 
 func newWorkspace() *Workspace {
 	return &Workspace{
-		RawConfig:    RawConfig{},
-		Applications: make(map[string]RawConfig),
+		RawConfig:    &RawConfig{},
+		Applications: make(map[string]*RawConfig),
 		Root:         "",
 	}
 }
@@ -45,51 +45,63 @@ func newConfigManager() *Manager {
 }
 
 // Creates config files and folders
-func (gcm *Manager) Create(name string, definition string) {
-	cfg := gcm.Config
-	cfgPath := cfg.createPath(name, definition)
-
-	rawConfig := RawConfig{}
-	rawConfig.init(definition)
-	rawConfig.setConfigDefaults()
-	rawConfig.setConfigPath(cfgPath)
-
-	switch definition {
-	case workspace:
-		cfg.RawConfig = rawConfig
-	case application:
-		cfg.addApplication(rawConfig)
-	}
-
-	rawConfig.create()
+func (cm *Manager) CreateConfig(name string, definition string) {
+	cfgPath := cm.Config.createPath(name, definition)
+	raw := cm.load(cfgPath, definition)
+	raw.create()
 }
 
 // Loads workspace and all application config inside `WorkspaceConfig.AppsDir` and 2 level down
-func (gcm *Manager) Load(root string) *Error {
-	cfg := gcm.Config
-	cfg.Root = toAbsolute(root)
+func (cm *Manager) LoadConfigs(root string) *ConfigError {
+	cm.Config.Root = toAbsolute(root)
 
 	var matches []string
 	// search workspace files
-	matches, _ = filepath.Glob(path.Join(cfg.Root, workspaceFileName))
+	matches, _ = filepath.Glob(path.Join(cm.Config.Root, workspaceFileName))
 	if len(matches) == 0 {
-		return ErrNotFound(workspace, cfg.Root)
+		return ErrNotFound(workspace, cm.Config.Root)
 	}
 
-	cfg.init(workspace)
-	cfg.setConfigPath(matches[0])
+	cm.load(matches[0], workspace)
 
 	// search application files
-	matches, _ = filepath.Glob(path.Join(cfg.Root, "**/**", applicationFileName))
+	matches, _ = filepath.Glob(path.Join(cm.Config.Root, "**/**", applicationFileName))
 	for _, match := range matches {
-		app := RawConfig{}
-		app.init(application)
-		app.setConfigPath(match)
-
-		cfg.addApplication(app)
+		cm.load(match, application)
 	}
 
 	return nil
+}
+
+// Load RawConfig structure
+func (cm *Manager) load(path string, definition string) *RawConfig {
+	raw := &RawConfig{
+		Path:   path,
+		Config: NewConfig(),
+	}
+
+	switch definition {
+	case workspace:
+		raw.Definition = definition
+
+		raw.Config.SetDefault("AppsDir", "apps")
+		raw.Config.SetDefault("Description", "Your description goes here")
+		raw.Config.SetDefault("Applications", []string{})
+
+		cm.Config.RawConfig = raw
+	case application:
+		raw.Definition = definition
+
+		raw.Config.SetDefault("Depends", []string{})
+		raw.Config.SetDefault("Description", "Add your Application description")
+		raw.Config.SetDefault("Channels", &ChannelYaml{})
+
+		cm.Config.addApplication(raw)
+	default:
+		util.Errorf("Unknown definition for config \t\"path\": \"%s\"\t\"type\": \"%s\"", raw.Path, raw.Definition)
+	}
+
+	return raw
 }
 
 // Returns Application config in case if exists in Workspace, empty string otherwise
@@ -97,7 +109,7 @@ func (w *Workspace) search(name string) *RawConfig {
 	for appName, _ := range w.Applications {
 		if appName == name {
 			rawCfg := w.Applications[appName]
-			return &rawCfg
+			return rawCfg
 		}
 	}
 
@@ -112,33 +124,8 @@ func (w *Workspace) getAppsDir() string {
 	return w.Config.GetString("AppsDir")
 }
 
-// Validate and initialize RawConfig struct
-func (cfg *RawConfig) init(definition string) {
-	cfg.defineType(definition)
-
-	cfg.Config = NewConfig()
-	util.Debugf("init raw config \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
-}
-
-func (cfg *RawConfig) defineType(definition string) {
-	switch definition {
-	case workspace:
-	case application:
-	default:
-		util.Errorf("Unknown definition for config \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
-	}
-	cfg.Definition = definition
-}
-
-// Set RawConfig values
-func (cfg *RawConfig) setConfigPath(configPath string) {
-	cfg.Path = configPath
-
-	util.Debugf("set config path \t\"path\": \"%s\"\t\"type\": \"%s\"", cfg.Path, cfg.Definition)
-}
-
 // Adds application to Workspace struct
-func (w *Workspace) addApplication(cfg RawConfig) {
+func (w *Workspace) addApplication(cfg *RawConfig) {
 	w.Applications[cfg.name()] = cfg
 }
 
